@@ -30,12 +30,12 @@ import pymysql.cursors
 # ============================================================
 # Cambia estos valores según tu instalación de MySQL
 MYSQL_CONFIG = {
-    'host':     os.getenv('MYSQL_HOST',     'localhost'),
-    'port':     int(os.getenv('MYSQL_PORT', '3306')),
-    'user':     os.getenv('MYSQL_USER',     'root'),
-    'password': os.getenv('MYSQL_PASSWORD', 'lizandro2009'),
-    # Railway usa MYSQL_DATABASE; localmente se usa MYSQL_DB
-    'database': os.getenv('MYSQL_DATABASE', os.getenv('MYSQL_DB', 'safepickup')),
+    # Railway usa MYSQLHOST/MYSQLPORT; local usa MYSQL_HOST/MYSQL_PORT
+    'host':     os.getenv('MYSQL_HOST', os.getenv('MYSQLHOST', 'localhost')),
+    'port':     int(os.getenv('MYSQL_PORT', os.getenv('MYSQLPORT', '3306'))),
+    'user':     os.getenv('MYSQL_USER', os.getenv('MYSQLUSER', 'root')),
+    'password': os.getenv('MYSQL_PASSWORD', os.getenv('MYSQLPASSWORD', 'lizandro2009')),
+    'database': os.getenv('MYSQL_DATABASE', os.getenv('MYSQLDATABASE', os.getenv('MYSQL_DB', 'safepickup'))),
     'charset':  'utf8mb4',
     'cursorclass': pymysql.cursors.DictCursor,
     'autocommit': True
