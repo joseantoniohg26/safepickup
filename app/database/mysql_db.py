@@ -47,6 +47,79 @@ def _conexion():
     return pymysql.connect(**MYSQL_CONFIG)
 
 
+def inicializar_schema():
+    """Crea las tablas si no existen. Se llama al arrancar la app."""
+    try:
+        with _conexion() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""CREATE TABLE IF NOT EXISTS aulas (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    nombre VARCHAR(50) NOT NULL,
+                    edad TINYINT NOT NULL,
+                    secciones VARCHAR(10) NOT NULL DEFAULT 'A',
+                    color VARCHAR(20) NOT NULL DEFAULT 'blue',
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )""")
+                cur.execute("""CREATE TABLE IF NOT EXISTS estudiantes (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    nombres VARCHAR(80) NOT NULL,
+                    apellidos VARCHAR(80) NOT NULL,
+                    fecha_nac DATE,
+                    sexo CHAR(1),
+                    dni VARCHAR(8),
+                    matricula VARCHAR(20) NOT NULL,
+                    aula_id INT NOT NULL,
+                    seccion CHAR(1) NOT NULL DEFAULT 'A',
+                    turno VARCHAR(10) NOT NULL DEFAULT 'Mañana',
+                    estado_hoy VARCHAR(20) NOT NULL DEFAULT 'presente',
+                    hora_recojo TIME,
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (aula_id) REFERENCES aulas(id) ON DELETE RESTRICT
+                )""")
+                cur.execute("""CREATE TABLE IF NOT EXISTS apoderados (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    nombres VARCHAR(80) NOT NULL,
+                    apellidos VARCHAR(80) NOT NULL,
+                    dni VARCHAR(8) NOT NULL,
+                    telefono VARCHAR(12),
+                    parentesco VARCHAR(30) NOT NULL,
+                    estudiante_id INT,
+                    embedding JSON,
+                    tiene_embedding TINYINT(1) NOT NULL DEFAULT 0,
+                    estado VARCHAR(20) NOT NULL DEFAULT 'activo',
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (estudiante_id) REFERENCES estudiantes(id) ON DELETE SET NULL
+                )""")
+                cur.execute("""CREATE TABLE IF NOT EXISTS eventos (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    tipo VARCHAR(30) NOT NULL,
+                    apoderado_id INT,
+                    nombre VARCHAR(160),
+                    confianza DECIMAL(5,2),
+                    motivo VARCHAR(255),
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (apoderado_id) REFERENCES apoderados(id) ON DELETE SET NULL
+                )""")
+                cur.execute("""CREATE TABLE IF NOT EXISTS usuarios (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    usuario VARCHAR(30) NOT NULL UNIQUE,
+                    password VARCHAR(60) NOT NULL,
+                    nombre VARCHAR(80) NOT NULL,
+                    rol VARCHAR(20) NOT NULL DEFAULT 'admin',
+                    activo TINYINT(1) NOT NULL DEFAULT 1,
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )""")
+                cur.execute("""INSERT IGNORE INTO aulas (nombre, edad, secciones, color) VALUES
+                    ('Mariposas',3,'A,B','amber'),('Pollitos',4,'A,B','green'),
+                    ('Ositos',5,'A','blue'),('Estrellitas',4,'A,B,C','purple')""")
+                cur.execute("""INSERT IGNORE INTO usuarios (usuario, password, nombre, rol) VALUES
+                    ('admin','safepickup2026','Directora Sánchez','admin'),
+                    ('director','director123','Director General','director')""")
+        print("[OK] Schema inicializado correctamente")
+    except Exception as e:
+        print(f"[WARN] Error inicializando schema: {e}")
+
+
 def verificar_conexion():
     """
     Verifica que la conexión a MySQL esté disponible.

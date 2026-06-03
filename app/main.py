@@ -67,6 +67,7 @@ print(f"  [OK] Anti-spoofing listo")
 print("Verificando conexion a MySQL...")
 if db.verificar_conexion():
     print("  [OK] MySQL conectado")
+    db.inicializar_schema()
 else:
     print("  [WARN] MySQL no disponible")
 
