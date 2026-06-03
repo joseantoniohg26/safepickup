@@ -1,0 +1,26 @@
+# SafePickup — Dependencias
+# Instalar con: pip install -r requirements.txt
+
+# Deep Learning (CPU-only para servidor — mucho mas liviano que CUDA)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.2.0+cpu
+torchvision==0.17.0+cpu
+facenet-pytorch>=2.5.3
+
+# Procesamiento de imagen (headless = sin GUI, necesario en servidores Linux)
+opencv-python-headless>=4.9.0
+Pillow>=10.0.0
+numpy>=1.26.0
+scikit-image>=0.22.0
+
+# Backend
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.6.0
+python-multipart>=0.0.9
+
+# Base de datos MySQL
+PyMySQL>=1.1.0
+
+# Utilidades
+python-dotenv>=1.0.0

@@ -1,0 +1,1 @@
+"""SafePickup — Backend principal."""

@@ -1,0 +1,33 @@
+# Entorno virtual
+venv/
+env/
+.venv/
+
+# Cache de Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+
+# Modelos descargados (pesan mucho, no se suben)
+data/modelos/*.pt
+data/modelos/*.pth
+
+# Fotos de prueba (datos personales)
+data/fotos_prueba/
+data/embeddings/
+
+# Variables de entorno (contraseñas, claves)
+.env
+
+# Datos locales (no se suben al servidor)
+data/database/*.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Sistema
+.DS_Store
+Thumbs.db

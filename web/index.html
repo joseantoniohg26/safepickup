@@ -1,0 +1,3587 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafePickup — Sistema de verificación facial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+
+:root{
+  --primary:#0F2D5C;
+  --primary-dark:#0A1F40;
+  --primary-light:#1E4581;
+  --accent:#C8161D;
+  --accent-dark:#A01217;
+
+  --green:#16A34A;--green-bg:#F0FDF4;--green-border:#86EFAC;--green-text:#14532D;
+  --red:#DC2626;--red-bg:#FEF2F2;--red-border:#FCA5A5;--red-text:#7F1D1D;
+  --amber:#D97706;--amber-bg:#FFFBEB;--amber-border:#FCD34D;--amber-text:#78350F;
+  --blue:#1E40AF;--blue-bg:#EFF6FF;--blue-border:#93C5FD;--blue-text:#1E3A5F;
+  --purple:#7C3AED;--purple-bg:#F5F3FF;--purple-border:#C4B5FD;--purple-text:#5B21B6;
+
+  --bg:#F4F6F8;
+  --surface:#FFFFFF;
+  --border:#E2E8EF;
+  --border-soft:#F1F4F7;
+  --text:#0F172A;
+  --text-2:#475569;
+  --text-3:#94A3B8;
+
+  --sidebar-w:240px;
+  --header-h:56px;
+  --radius:6px;
+  --radius-lg:8px;
+  --shadow:0 1px 2px rgba(15,45,92,0.06);
+  --shadow-md:0 4px 10px rgba(15,45,92,0.08);
+  --shadow-lg:0 20px 40px rgba(15,45,92,0.15);
+}
+
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.5;min-height:100vh;}
+
+.icon{width:18px;height:18px;stroke-width:1.8;stroke:currentColor;fill:none;stroke-linecap:round;stroke-linejoin:round;display:inline-block;flex-shrink:0;}
+.icon-sm{width:14px;height:14px;}
+.icon-lg{width:22px;height:22px;}
+.icon-xl{width:32px;height:32px;}
+
+/* ============= LOGIN ============= */
+.login{position:fixed;inset:0;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+.login-card{background:#fff;border-radius:10px;padding:36px 32px;width:100%;max-width:400px;box-shadow:0 25px 50px rgba(0,0,0,0.3);border-top:4px solid var(--accent);}
+.login-header{display:flex;flex-direction:column;align-items:center;margin-bottom:24px;text-align:center;}
+.login-logo{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--primary-light));display:flex;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 6px 14px rgba(15,45,92,0.2);color:#fff;}
+.login-title{font-size:20px;font-weight:700;color:var(--primary);}
+.login-sub{font-size:12px;color:var(--text-2);margin-top:6px;}
+.login-org{margin-top:14px;padding:8px 14px;background:var(--bg);border-radius:6px;font-size:11px;color:var(--text-2);font-weight:500;}
+
+.field{margin-bottom:14px;}
+.field-label{display:block;font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;}
+.field-input-wrap{position:relative;}
+.field-input-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-3);}
+.field-input{width:100%;padding:11px 14px 11px 38px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:var(--text);transition:border-color 0.15s;}
+.field-input:focus{outline:none;border-color:var(--primary);}
+
+.btn-login{width:100%;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;margin-top:6px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:background 0.15s;}
+.btn-login:hover{background:var(--primary-dark);}
+
+.login-error{background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);border-radius:6px;padding:8px 12px;font-size:12px;margin-bottom:12px;display:none;align-items:center;gap:8px;}
+.login-error.show{display:flex;}
+.login-hint{margin-top:20px;padding-top:18px;border-top:1px solid var(--border-soft);text-align:center;font-size:11px;color:var(--text-3);line-height:1.7;}
+.login-hint code{background:var(--bg);padding:2px 6px;border-radius:3px;font-family:monospace;color:var(--primary);font-weight:600;}
+
+/* ============= APP ============= */
+.app{display:none;min-height:100vh;}
+.app.show{display:block;}
+.layout{display:flex;min-height:100vh;}
+
+.sidebar{width:var(--sidebar-w);background:var(--primary);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;flex-shrink:0;}
+.sidebar-header{padding:16px 18px 14px;display:flex;align-items:center;gap:11px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.sidebar-logo{width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sidebar-brand{font-size:14px;font-weight:700;line-height:1.2;}
+.sidebar-brand-sub{font-size:10px;color:rgba(255,255,255,0.55);margin-top:2px;}
+
+.sidebar-status{padding:10px 18px;font-size:11px;color:rgba(255,255,255,0.75);display:flex;align-items:center;gap:7px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#4ADE80;animation:pulse 1.5s ease-in-out infinite;}
+.status-dot.offline{background:#F87171;animation:none;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+.sidebar-nav{flex:1;overflow-y:auto;padding:14px 10px;}
+.nav-section{font-size:10px;font-weight:600;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;padding:14px 10px 6px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:5px;color:rgba(255,255,255,0.75);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left;font-family:inherit;position:relative;}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:#fff;}
+.nav-item.active{background:rgba(255,255,255,0.13);color:#fff;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;background:var(--accent);border-radius:0 2px 2px 0;}
+.nav-icon{flex-shrink:0;}
+.nav-badge{margin-left:auto;background:var(--accent);color:#fff;font-size:9px;font-weight:600;padding:2px 6px;border-radius:9px;letter-spacing:0.03em;}
+
+.sidebar-footer{padding:12px 14px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px;font-size:12px;}
+.user-avatar-sb{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--primary-light),var(--primary-dark));display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;flex-shrink:0;border:2px solid rgba(255,255,255,0.15);}
+.user-name-sb{font-weight:600;color:#fff;font-size:12px;line-height:1.2;}
+.user-role-sb{font-size:10px;color:rgba(255,255,255,0.5);margin-top:1px;}
+.btn-logout{margin-left:auto;background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;padding:6px;border-radius:4px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.btn-logout:hover{color:#fff;background:rgba(255,255,255,0.08);}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column;}
+
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;height:var(--header-h);display:flex;align-items:center;justify-content:space-between;gap:16px;position:sticky;top:0;z-index:10;}
+.topbar-left{display:flex;align-items:center;gap:14px;}
+.page-title{font-size:15px;font-weight:600;color:var(--text);}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-3);margin-top:2px;}
+.breadcrumb-sep{color:var(--text-3);}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:14px;font-size:11px;font-weight:500;background:var(--bg);color:var(--text-2);border:1px solid var(--border);}
+.chip-green{background:var(--green-bg);color:var(--green-text);border-color:var(--green-border);}
+.chip-blue{background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-border);}
+.chip-amber{background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber-border);}
+.chip-red{background:var(--red-bg);color:var(--red-text);border-color:var(--red-border);}
+.chip-purple{background:var(--purple-bg);color:var(--purple-text);border-color:var(--purple-border);}
+.chip-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+.content{padding:20px 24px;flex:1;}
+
+.page{display:none;}
+.page.active{display:block;}
+
+/* CARDS */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);}
+.card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.card-title{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:9px;text-transform:uppercase;letter-spacing:0.04em;}
+.card-body{padding:18px;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid transparent;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all 0.15s;}
+.btn-sm{padding:6px 10px;font-size:11px;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-dark);}
+.btn-accent{background:var(--accent);color:#fff;}
+.btn-accent:hover{background:var(--accent-dark);}
+.btn-success{background:var(--green);color:#fff;}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-danger:hover{background:#B91C1C;}
+.btn-outline{background:#fff;color:var(--text);border-color:var(--border);}
+.btn-outline:hover{background:var(--bg);}
+.btn-ghost{background:transparent;color:var(--text-2);}
+.btn-ghost:hover{background:var(--bg);color:var(--text);}
+.btn-full{width:100%;justify-content:center;}
+.btn:disabled{opacity:0.5;cursor:not-allowed;}
+
+/* ============= DASHBOARD KPIs ============= */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;}
+.kpi-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;box-shadow:var(--shadow);display:flex;align-items:flex-start;gap:14px;}
+.kpi-icon-wrap{width:42px;height:42px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.kpi-blue{background:var(--blue-bg);color:var(--blue);}
+.kpi-green{background:var(--green-bg);color:var(--green);}
+.kpi-red{background:var(--red-bg);color:var(--red);}
+.kpi-amber{background:var(--amber-bg);color:var(--amber);}
+.kpi-purple{background:var(--purple-bg);color:var(--purple);}
+.kpi-content{flex:1;min-width:0;}
+.kpi-label{font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;}
+.kpi-value{font-size:26px;font-weight:700;line-height:1.1;color:var(--text);display:flex;align-items:baseline;gap:6px;}
+.kpi-value-green{color:var(--green);}
+.kpi-value-red{color:var(--red);}
+.kpi-value-amber{color:var(--amber);}
+.kpi-sub{font-size:11px;color:var(--text-3);margin-top:4px;}
+
+.dash-grid{display:grid;grid-template-columns:1fr 360px;gap:16px;}
+
+.dash-cam{background:#0B1120;aspect-ratio:16/9;border-radius:var(--radius);position:relative;overflow:hidden;}
+.dash-cam-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(255,255,255,0.35);gap:10px;}
+.dash-cam-link{margin-top:10px;background:var(--accent);color:#fff;padding:7px 14px;border-radius:5px;font-size:11px;text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:none;font-family:inherit;}
+.dash-cam-info{font-size:11px;color:var(--text-2);padding:10px 16px;background:var(--bg);border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+
+.alert-list{display:flex;flex-direction:column;gap:8px;}
+.alert-item{padding:11px 14px;border-radius:6px;border:1px solid;font-size:12px;}
+.alert-item.danger{background:var(--red-bg);border-color:var(--red-border);}
+.alert-item.warning{background:var(--amber-bg);border-color:var(--amber-border);}
+.alert-item.info{background:var(--blue-bg);border-color:var(--blue-border);}
+.alert-title{font-weight:600;font-size:12px;display:flex;justify-content:space-between;margin-bottom:3px;}
+.alert-meta{font-size:11px;color:var(--text-2);}
+
+.event-list{display:flex;flex-direction:column;}
+.event-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-soft);font-size:12px;}
+.event-item:last-child{border-bottom:none;}
+.event-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.event-dot.success{background:var(--green);}
+.event-dot.danger{background:var(--red);}
+.event-dot.warning{background:var(--amber);}
+.event-content{flex:1;min-width:0;}
+.event-title{font-weight:600;font-size:12px;color:var(--text);}
+.event-meta{font-size:11px;color:var(--text-2);margin-top:2px;}
+.event-time{font-size:11px;color:var(--text-3);font-family:'SF Mono','Consolas',monospace;flex-shrink:0;}
+
+.sysmetric{display:flex;justify-content:space-between;align-items:center;padding:9px 0;font-size:12px;border-bottom:1px solid var(--border-soft);}
+.sysmetric:last-child{border-bottom:none;}
+.sysmetric-label{color:var(--text-2);}
+
+/* ============= CÁMARA ============= */
+.cam-page{display:flex;flex-direction:column;gap:14px;}
+.cam-container{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);}
+.cam-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.cam-head-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;display:flex;align-items:center;gap:9px;}
+
+.camera-view{position:relative;background:#0B1120;aspect-ratio:16/9;overflow:hidden;}
+.camera-view video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
+.camera-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(255,255,255,0.4);gap:12px;}
+
+.face-box{position:absolute;border:2.5px solid #4ADE80;border-radius:3px;transition:all 0.15s;pointer-events:none;}
+.face-box.error{border-color:#F87171;}
+.face-box.warning{border-color:#FBBF24;}
+.face-box-label{position:absolute;top:-26px;left:-2.5px;background:#4ADE80;color:#052e16;font-size:11px;font-weight:700;padding:3px 10px;border-radius:3px 3px 0 0;white-space:nowrap;display:flex;align-items:center;gap:6px;}
+.face-box.error .face-box-label{background:#F87171;color:#450a0a;}
+.face-box.warning .face-box-label{background:#FBBF24;color:#451a03;}
+.face-box-conf{position:absolute;bottom:-22px;left:-2.5px;background:rgba(0,0,0,0.85);color:#fff;font-size:10px;padding:3px 8px;border-radius:0 0 3px 3px;font-family:'SF Mono','Consolas',monospace;white-space:nowrap;}
+
+.cam-overlay{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;pointer-events:none;gap:8px;}
+.cam-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.cam-chip-dark{background:rgba(0,0,0,0.75);color:rgba(255,255,255,0.95);font-size:10px;padding:5px 10px;border-radius:3px;font-family:'SF Mono','Consolas',monospace;letter-spacing:0.02em;}
+.cam-rec{background:rgba(220,38,38,0.95);color:#fff;font-size:10px;font-weight:700;padding:5px 11px;border-radius:3px;display:flex;align-items:center;gap:6px;letter-spacing:0.05em;}
+.cam-rec::before{content:'';width:7px;height:7px;border-radius:50%;background:#fff;animation:pulse 1s ease-in-out infinite;}
+
+.cam-footer{padding:12px 18px;background:var(--bg);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.cam-footer-info{font-size:11px;color:var(--text-2);display:flex;align-items:center;gap:8px;}
+.cam-footer-info code{background:#fff;padding:2px 7px;border-radius:3px;font-size:10px;font-family:'SF Mono',monospace;border:1px solid var(--border);color:var(--primary);}
+
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.result-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);}
+.result-card.active-success{border-color:var(--green-border);box-shadow:0 0 0 1px var(--green-border), var(--shadow-md);}
+.result-card.active-danger{border-color:var(--red-border);box-shadow:0 0 0 1px var(--red-border), var(--shadow-md);}
+.result-banner{padding:16px 20px;text-align:center;background:var(--bg);border-bottom:1px solid var(--border);}
+.result-banner.success{background:var(--green-bg);border-color:var(--green-border);}
+.result-banner.danger{background:var(--red-bg);border-color:var(--red-border);}
+.result-banner.warning{background:var(--amber-bg);border-color:var(--amber-border);}
+.result-banner-title{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;justify-content:center;gap:8px;}
+.result-banner.success .result-banner-title{color:var(--green-text);}
+.result-banner.danger .result-banner-title{color:var(--red-text);}
+.result-banner.warning .result-banner-title{color:var(--amber-text);}
+.result-banner-sub{font-size:11px;color:var(--text-2);margin-top:4px;}
+.result-body{padding:16px 18px;}
+
+.person-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:12px;}
+.person-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--green-bg),var(--green-border));color:var(--green-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+.person-avatar.warn{background:linear-gradient(135deg,var(--amber-bg),var(--amber-border));color:var(--amber-text);}
+.person-avatar.danger{background:linear-gradient(135deg,var(--red-bg),var(--red-border));color:var(--red-text);}
+.person-avatar.blue{background:linear-gradient(135deg,var(--blue-bg),var(--blue-border));color:var(--blue-text);}
+.person-name{font-size:13px;font-weight:600;line-height:1.2;color:var(--text);}
+.person-meta{font-size:11px;color:var(--text-2);margin-top:3px;}
+.person-extra{font-size:10px;color:var(--text-3);margin-top:3px;font-family:monospace;}
+
+.alert-notification{background:var(--red-bg);border:1px solid var(--red-border);border-radius:5px;padding:9px 12px;font-size:11px;color:var(--red-text);font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+
+.confidence-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:6px;}
+.confidence-label{color:var(--text-2);}
+.confidence-val{font-weight:700;font-family:'SF Mono',monospace;padding:2px 8px;border-radius:10px;font-size:11px;}
+.confidence-val.high{background:var(--green-bg);color:var(--green-text);}
+.confidence-val.low{background:var(--red-bg);color:var(--red-text);}
+.bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:6px;}
+.bar-fill{height:100%;background:var(--green);transition:width 0.3s;}
+.bar-fill.low{background:var(--red);}
+.threshold-hint{font-size:10px;color:var(--text-3);margin-top:4px;}
+
+.empty{text-align:center;padding:40px 20px;color:var(--text-3);}
+.empty-icon{font-size:30px;margin-bottom:10px;opacity:0.4;}
+.empty-title{font-size:13px;font-weight:500;}
+.empty-sub{font-size:11px;margin-top:4px;}
+
+/* ============= PAGE HEADER ============= */
+.page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:14px;flex-wrap:wrap;}
+.page-head-info h2{font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.page-head-info p{font-size:12px;color:var(--text-2);}
+
+/* ============= TABLA ============= */
+.table-toolbar{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--bg);}
+.search-box{flex:1;max-width:380px;position:relative;}
+.search-input{width:100%;padding:8px 12px 8px 34px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-family:inherit;background:#fff;}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-3);}
+.filter-select{padding:8px 12px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-family:inherit;background:#fff;cursor:pointer;color:var(--text);}
+
+.data-table{width:100%;border-collapse:collapse;}
+.data-table thead th{text-align:left;font-size:10px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;padding:12px 18px;border-bottom:1px solid var(--border);background:#FAFBFD;}
+.data-table tbody td{padding:14px 18px;border-bottom:1px solid var(--border-soft);font-size:12px;vertical-align:middle;color:var(--text);}
+.data-table tbody tr:hover td{background:#FAFBFD;}
+.data-table tbody tr:last-child td{border-bottom:none;}
+.cell-name{display:flex;align-items:center;gap:11px;}
+.cell-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--blue-bg),var(--blue-border));color:var(--blue-text);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:11px;flex-shrink:0;}
+.cell-avatar.green{background:linear-gradient(135deg,var(--green-bg),var(--green-border));color:var(--green-text);}
+.cell-avatar.amber{background:linear-gradient(135deg,var(--amber-bg),var(--amber-border));color:var(--amber-text);}
+.cell-avatar.purple{background:linear-gradient(135deg,var(--purple-bg),var(--purple-border));color:var(--purple-text);}
+.cell-info{min-width:0;}
+.cell-primary{font-weight:600;font-size:12px;color:var(--text);}
+.cell-secondary{font-size:11px;color:var(--text-3);margin-top:2px;}
+
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:11px;font-size:10px;font-weight:600;border:1px solid;}
+.badge-green{background:var(--green-bg);color:var(--green-text);border-color:var(--green-border);}
+.badge-blue{background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-border);}
+.badge-amber{background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber-border);}
+.badge-red{background:var(--red-bg);color:var(--red-text);border-color:var(--red-border);}
+.badge-gray{background:var(--bg);color:var(--text-2);border-color:var(--border);}
+.badge-purple{background:var(--purple-bg);color:var(--purple-text);border-color:var(--purple-border);}
+
+.table-footer{padding:12px 18px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--text-2);background:#FAFBFD;}
+.pagination{display:flex;gap:4px;}
+.page-btn{padding:6px 12px;border:1px solid var(--border);background:#fff;border-radius:4px;font-size:12px;cursor:pointer;color:var(--text);font-family:inherit;}
+.page-btn:hover{background:var(--bg);}
+.page-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.page-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+.row-actions{display:flex;gap:4px;}
+.icon-btn{width:30px;height:30px;border:1px solid var(--border);background:#fff;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-2);transition:all 0.15s;}
+.icon-btn:hover{background:var(--bg);color:var(--text);border-color:var(--text-3);}
+.icon-btn.danger:hover{background:var(--red-bg);color:var(--red);border-color:var(--red-border);}
+
+/* ============= MINI STATS (Apoderados) ============= */
+.mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+.mini-stat{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;box-shadow:var(--shadow);}
+.mini-stat-label{font-size:11px;color:var(--text-2);margin-bottom:4px;}
+.mini-stat-value{font-size:26px;font-weight:700;line-height:1;}
+.mini-stat-value.green{color:var(--green);}
+.mini-stat-value.amber{color:var(--amber);}
+.mini-stat-sub{font-size:11px;color:var(--text-3);margin-top:4px;}
+
+/* ============= AULAS GRID ============= */
+.aulas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+.aula-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;box-shadow:var(--shadow);transition:all 0.15s;}
+.aula-card:hover{box-shadow:var(--shadow-md);border-color:var(--primary-light);}
+.aula-card-head{display:flex;align-items:flex-start;gap:11px;margin-bottom:12px;}
+.aula-icon{width:42px;height:42px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.aula-info{flex:1;min-width:0;}
+.aula-name{font-size:14px;font-weight:700;color:var(--text);}
+.aula-edad{font-size:11px;color:var(--text-2);margin-top:2px;}
+.aula-secciones{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.aula-seccion-tag{padding:3px 10px;background:var(--blue-bg);color:var(--blue-text);border:1px solid var(--blue-border);border-radius:11px;font-size:11px;font-weight:600;}
+.aula-stats{display:flex;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border-soft);font-size:11px;}
+.aula-stat-label{color:var(--text-3);}
+.aula-stat-value{font-weight:600;color:var(--text);}
+
+/* ============= MODAL (Ventana flotante con barra de título) ============= */
+.modal-backdrop{position:fixed;inset:0;background:rgba(15,45,92,0.55);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-backdrop.show{display:flex;}
+
+.modal{background:#fff;border-radius:8px;box-shadow:var(--shadow-lg);width:100%;max-width:900px;max-height:calc(100vh - 40px);display:flex;flex-direction:column;overflow:hidden;position:relative;}
+.modal.minimized{max-width:280px;height:42px !important;max-height:42px;}
+.modal.minimized .modal-body, .modal.minimized .modal-footer{display:none;}
+.modal.maximized{max-width:100vw !important;max-height:100vh !important;width:100vw !important;height:100vh !important;border-radius:0;}
+
+.modal-titlebar{background:var(--primary);color:#fff;padding:0 4px 0 14px;height:42px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;user-select:none;}
+.modal-titlebar-title{font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.modal-titlebar-controls{display:flex;gap:0;}
+.titlebar-btn{width:42px;height:42px;border:none;background:transparent;color:rgba(255,255,255,0.85);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s;}
+.titlebar-btn:hover{background:rgba(255,255,255,0.12);}
+.titlebar-btn.close:hover{background:#E81123;color:#fff;}
+
+.modal-body{padding:24px 28px;overflow-y:auto;flex:1;}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;}
+
+/* MODAL CONTENT - REGISTRO APODERADO */
+.modal-section{margin-bottom:22px;}
+.modal-section-title{font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:11px;padding-bottom:6px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;gap:8px;}
+.modal-section-title-icon{color:var(--primary);}
+
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:12px;}
+.form-group{margin-bottom:12px;}
+.form-label{display:block;font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:5px;}
+.form-label .req{color:var(--accent);}
+.form-control{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-family:inherit;background:#fff;color:var(--text);transition:border-color 0.15s;}
+.form-control:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(15,45,92,0.08);}
+select.form-control{cursor:pointer;}
+
+.info-box{background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:5px;padding:10px 12px;font-size:11px;color:var(--blue-text);display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;}
+
+.photos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.photo-slot{aspect-ratio:1;border:2px dashed var(--border);border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--text-3);font-size:11px;background:#FAFBFD;transition:all 0.15s;position:relative;overflow:hidden;}
+.photo-slot:hover{border-color:var(--primary-light);background:var(--blue-bg);color:var(--primary);}
+.photo-slot.filled{border:none;background:#000;}
+.photo-slot.filled img{width:100%;height:100%;object-fit:cover;}
+.photo-slot.filled .photo-slot-label{display:none;}
+.photo-slot-label{font-size:11px;font-weight:500;margin-top:6px;}
+.photo-slot-remove{position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;}
+.photo-slot.filled .photo-slot-remove{display:flex;}
+
+/* WIZARD para registro de estudiante */
+.wizard-steps{display:flex;justify-content:space-between;margin-bottom:24px;position:relative;padding:0 30px;}
+.wizard-steps::before{content:'';position:absolute;top:18px;left:60px;right:60px;height:2px;background:var(--border);z-index:0;}
+.wizard-step{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;flex:1;cursor:pointer;}
+.wizard-step-num{width:36px;height:36px;border-radius:50%;background:#fff;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--text-3);margin-bottom:6px;transition:all 0.2s;}
+.wizard-step.active .wizard-step-num{background:var(--primary);color:#fff;border-color:var(--primary);}
+.wizard-step.done .wizard-step-num{background:var(--green);color:#fff;border-color:var(--green);}
+.wizard-step-label{font-size:11px;color:var(--text-3);font-weight:500;}
+.wizard-step.active .wizard-step-label{color:var(--text);font-weight:600;}
+.wizard-step.done .wizard-step-label{color:var(--green-text);}
+
+.wizard-content{display:none;}
+.wizard-content.active{display:block;}
+
+.photo-capture{background:#0B1120;aspect-ratio:4/3;border-radius:6px;position:relative;overflow:hidden;margin-bottom:10px;}
+.photo-capture video{width:100%;height:100%;object-fit:cover;}
+.photo-capture img{width:100%;height:100%;object-fit:cover;}
+.photo-capture-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(255,255,255,0.4);gap:8px;font-size:12px;}
+
+/* RESPONSIVE */
+/* Indicadores de slots de foto */
+.foto-slot-indicator{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:8px 12px;border-radius:8px;
+  border:2px dashed var(--border);
+  background:var(--bg);font-size:10px;
+  color:var(--text-3);text-align:center;
+  transition:all 0.2s;min-width:70px;
+}
+.foto-slot-indicator span{font-weight:600;font-size:11px;}
+.foto-slot-indicator small{font-size:9px;color:var(--text-3);}
+.foto-slot-indicator.capturada{
+  border-color:var(--green-border);background:var(--green-bg);color:var(--green-text);
+}
+.foto-slot-indicator.activa{
+  border-color:var(--accent);background:#FFF5F5;color:var(--accent);
+  border-style:solid;
+}
+.apo-thumbnail{
+  width:50px;height:50px;border-radius:5px;
+  object-fit:cover;border:2px solid var(--green-border);
+  cursor:pointer;position:relative;
+}
+.apo-thumb-wrap{position:relative;display:inline-block;}
+.apo-thumb-remove{
+  position:absolute;top:-5px;right:-5px;
+  width:16px;height:16px;border-radius:50%;
+  background:var(--red);color:#fff;border:none;
+  cursor:pointer;font-size:9px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  line-height:1;
+}
+
+/* ============= CONFIGURACIÓN ============= */
+.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.config-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);}
+.config-card-header{padding:14px 18px;border-bottom:1px solid var(--border);background:#FAFBFD;}
+.config-card-title{font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.06em;display:flex;align-items:center;gap:9px;}
+.config-card-title-icon{color:var(--primary);}
+.config-card-body{padding:18px;}
+
+.config-field{margin-bottom:16px;}
+.config-field:last-child{margin-bottom:0;}
+.config-field-label{display:block;font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:6px;}
+.config-field-hint{font-size:10px;color:var(--text-3);margin-top:5px;font-style:italic;}
+.config-field-help{font-size:11px;color:var(--blue-text);background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:5px;padding:9px 11px;margin-top:8px;display:flex;align-items:flex-start;gap:8px;line-height:1.5;}
+
+.slider-wrap{position:relative;padding:14px 0 8px;}
+.slider-input{width:100%;-webkit-appearance:none;appearance:none;height:6px;background:linear-gradient(to right,var(--green) 0%,var(--amber) 50%,var(--red) 100%);border-radius:3px;outline:none;}
+.slider-input::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;background:var(--primary);border:3px solid #fff;border-radius:50%;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.2);}
+.slider-input::-moz-range-thumb{width:18px;height:18px;background:var(--primary);border:3px solid #fff;border-radius:50%;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.2);}
+.slider-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);margin-top:8px;}
+.slider-current{position:absolute;background:var(--primary);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;top:-2px;transform:translateX(-50%);font-family:'SF Mono',monospace;}
+
+.system-status-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:6px;border:1px solid;font-size:12px;margin-bottom:10px;}
+.system-status-card.ok{background:var(--green-bg);border-color:var(--green-border);}
+.system-status-card.warning{background:var(--amber-bg);border-color:var(--amber-border);}
+.system-status-card.error{background:var(--red-bg);border-color:var(--red-border);}
+.system-status-icon{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.system-status-card.ok .system-status-icon{background:var(--green);color:#fff;}
+.system-status-card.warning .system-status-icon{background:var(--amber);color:#fff;}
+.system-status-card.error .system-status-icon{background:var(--red);color:#fff;}
+.system-status-content{flex:1;min-width:0;}
+.system-status-title{font-weight:600;color:var(--text);font-size:12px;}
+.system-status-meta{font-size:11px;color:var(--text-2);margin-top:2px;font-family:'SF Mono',monospace;}
+
+.config-actions-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#FAFBFD;border:1px solid var(--border);border-radius:var(--radius-lg);margin-top:14px;}
+.config-actions-info{font-size:11px;color:var(--text-2);display:flex;align-items:center;gap:8px;}
+
+/* ============= HISTORIAL ============= */
+.history-list{display:flex;flex-direction:column;}
+.history-item{display:flex;align-items:flex-start;gap:14px;padding:14px 18px;border-bottom:1px solid var(--border-soft);font-size:12px;transition:background 0.1s;}
+.history-item:hover{background:#FAFBFD;}
+.history-item:last-child{border-bottom:none;}
+.history-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:3px;background:var(--text-3);}
+.history-dot.success{background:var(--green-bg);border:3px solid var(--green);}
+.history-dot.danger{background:var(--red-bg);border:3px solid var(--red);}
+.history-dot.warning{background:var(--amber-bg);border:3px solid var(--amber);}
+.history-dot.info{background:var(--blue-bg);border:3px solid var(--blue);}
+.history-content{flex:1;min-width:0;}
+.history-title{font-weight:600;font-size:13px;color:var(--text);line-height:1.3;}
+.history-meta{font-size:11px;color:var(--text-2);margin-top:3px;line-height:1.4;}
+.history-time{font-size:11px;color:var(--text-3);font-family:'SF Mono','Consolas',monospace;flex-shrink:0;font-weight:500;}
+
+.date-input{padding:8px 12px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-family:inherit;background:#fff;color:var(--text);cursor:pointer;}
+.date-input:focus{outline:none;border-color:var(--primary);}
+
+/* ============= ESTADÍSTICAS ============= */
+.stat-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+
+.bar-chart{display:flex;flex-direction:column;gap:14px;padding:8px 0;}
+.bar-chart-row{display:grid;grid-template-columns:60px 1fr;gap:14px;align-items:center;font-size:12px;}
+.bar-chart-label{color:var(--text-2);font-weight:600;font-family:'SF Mono',monospace;}
+.bar-chart-bar{position:relative;height:24px;background:var(--bg);border-radius:4px;overflow:hidden;}
+.bar-chart-fill{height:100%;border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;color:#fff;font-weight:600;font-size:11px;transition:width 0.6s ease;}
+.bar-chart-fill.blue{background:var(--primary);}
+.bar-chart-fill.green{background:var(--green);}
+.bar-chart-fill.amber{background:var(--amber);}
+.bar-chart-fill.red{background:var(--red);}
+
+.metric-row{padding:10px 0;}
+.metric-row-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;font-size:12px;}
+.metric-row-label{color:var(--text-2);font-weight:500;}
+.metric-row-value{font-weight:700;font-family:'SF Mono',monospace;}
+.metric-row-value.green{color:var(--green);}
+.metric-row-value.blue{color:var(--primary);}
+.metric-row-bar{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;}
+.metric-row-bar-fill{height:100%;border-radius:3px;transition:width 0.6s ease;}
+.metric-row-bar-fill.green{background:var(--green);}
+.metric-row-bar-fill.blue{background:var(--primary);}
+
+@media (max-width:1100px){
+  .dash-grid{grid-template-columns:1fr;}
+  .result-grid{grid-template-columns:1fr;}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .mini-stats{grid-template-columns:1fr;}
+  .stat-grid-2{grid-template-columns:1fr;}
+  .config-grid{grid-template-columns:1fr;}
+}
+@media (max-width:768px){
+  .sidebar{position:fixed;left:-240px;z-index:100;transition:left 0.2s;}
+  .sidebar.open{left:0;}
+  .kpi-grid{grid-template-columns:1fr;}
+  .form-row,.form-row-3{grid-template-columns:1fr;}
+  .content{padding:14px;}
+}
+
+#canvas-hidden{display:none;}
+
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:#94A3B8;}
+</style>
+</head>
+<body>
+
+<!-- ============= LOGIN ============= -->
+<div class="login" id="loginScreen">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-logo">
+        <svg class="icon icon-xl" viewBox="0 0 24 24"><path d="M12 2L4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4z"/><path d="M9 12l2 2 4-4"/></svg>
+      </div>
+      <div class="login-title">SafePickup</div>
+      <div class="login-sub">Sistema de verificación facial</div>
+      <div class="login-org">I.E.I. Nivel Inicial — Puerto Maldonado</div>
+    </div>
+
+    <div class="login-error" id="loginError">
+      <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Usuario o contraseña incorrectos
+    </div>
+
+    <div class="field">
+      <label class="field-label">Usuario</label>
+      <div class="field-input-wrap">
+        <svg class="icon icon-sm field-input-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <input type="text" class="field-input" id="loginUser" placeholder="admin" autocomplete="username">
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Contraseña</label>
+      <div class="field-input-wrap">
+        <svg class="icon icon-sm field-input-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <input type="password" class="field-input" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+      </div>
+    </div>
+
+    <button class="btn-login" onclick="hacerLogin()">
+      <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Iniciar sesión
+    </button>
+
+    <div class="login-hint">
+      Credenciales de prueba:<br>
+      Usuario: <code>admin</code> · Contraseña: <code>safepickup2026</code>
+    </div>
+  </div>
+</div>
+
+<!-- ============= APP ============= -->
+<div class="app" id="app">
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <svg class="icon icon-lg" viewBox="0 0 24 24" stroke="#fff"><path d="M12 2L4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4z"/><path d="M9 12l2 2 4-4"/></svg>
+    </div>
+    <div>
+      <div class="sidebar-brand">SafePickup</div>
+      <div class="sidebar-brand-sub">I.E.I. — Pto. Maldonado</div>
+    </div>
+  </div>
+
+  <div class="sidebar-status">
+    <span class="status-dot" id="statusDot"></span>
+    <span id="statusText">Sistema activo</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">Principal</div>
+    <button class="nav-item active" data-page="dashboard" onclick="navegar('dashboard')">
+      <svg class="icon nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+      Panel general
+    </button>
+    <button class="nav-item" data-page="camara" onclick="navegar('camara')">
+      <svg class="icon nav-icon" viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+      Cámara en vivo
+      <span class="nav-badge" id="navAlertBadge" style="display:none;">0</span>
+    </button>
+
+    <div class="nav-section">Gestión</div>
+    <button class="nav-item" data-page="estudiantes" onclick="navegar('estudiantes')">
+      <svg class="icon nav-icon" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+      Estudiantes
+    </button>
+    <button class="nav-item" data-page="apoderados" onclick="navegar('apoderados')">
+      <svg class="icon nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Apoderados
+    </button>
+    <button class="nav-item" data-page="aulas" onclick="navegar('aulas')">
+      <svg class="icon nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Aulas
+    </button>
+
+    <div class="nav-section">Reportes</div>
+    <button class="nav-item" data-page="historial" onclick="navegar('historial')">
+      <svg class="icon nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Historial
+    </button>
+    <button class="nav-item" data-page="estadisticas" onclick="navegar('estadisticas')">
+      <svg class="icon nav-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Estadísticas
+    </button>
+
+    <div class="nav-section">Sistema</div>
+    <button class="nav-item" data-page="configuracion" onclick="navegar('configuracion')">
+      <svg class="icon nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Configuración
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-avatar-sb" id="userInitials">DS</div>
+    <div style="flex:1;min-width:0;">
+      <div class="user-name-sb" id="userName">Directora Sánchez</div>
+      <div class="user-role-sb">Administradora</div>
+    </div>
+    <button class="btn-logout" onclick="cerrarSesion()" title="Cerrar sesión">
+      <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</aside>
+
+<main class="main">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="page-title" id="pageTitle">Panel general</div>
+        <div class="breadcrumb">
+          <span>SafePickup</span>
+          <span class="breadcrumb-sep">›</span>
+          <span id="breadcrumb">Inicio</span>
+        </div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="chip chip-green" id="chipBackend"><span class="chip-dot"></span>Backend activo</span>
+      <span class="chip" id="chipApoderados">0 apoderados</span>
+      <span class="chip" id="chipHora">--:--:--</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+  <!-- ════════════ DASHBOARD ════════════ -->
+  <div class="page active" id="page-dashboard">
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap kpi-blue">
+          <svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-label">Estudiantes</div>
+          <div class="kpi-value" id="kpiEstudiantes">0</div>
+          <div class="kpi-sub">registrados en nivel inicial</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap kpi-purple">
+          <svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-label">Apoderados</div>
+          <div class="kpi-value" id="kpiApoderados">0</div>
+          <div class="kpi-sub">con foto registrada</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap kpi-green">
+          <svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-label">Recojos hoy</div>
+          <div class="kpi-value kpi-value-green" id="kpiAutorizados">0</div>
+          <div class="kpi-sub">verificaciones exitosas</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap kpi-red">
+          <svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-label">Alertas hoy</div>
+          <div class="kpi-value kpi-value-red" id="kpiAlertas">0</div>
+          <div class="kpi-sub">no autorizados + spoofing</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              Cámara entrada principal
+            </div>
+            <span class="chip chip-green"><span class="chip-dot"></span>En vivo</span>
+          </div>
+          <div class="dash-cam">
+            <div class="dash-cam-empty">
+              <svg class="icon icon-xl" viewBox="0 0 24 24" style="opacity:0.5;width:40px;height:40px;"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              <div>Vista previa de la cámara</div>
+              <button class="dash-cam-link" onclick="navegar('camara')">
+                <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                Ir al módulo de cámara
+              </button>
+            </div>
+          </div>
+          <div class="dash-cam-info">
+            <span>CAM-01 · Entrada principal</span>
+            <span>Pipeline: MTCNN → Anti-spoofing → FaceNet</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+              Eventos recientes
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="cargarEventos()">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              Actualizar
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="event-list" id="dashEventList">
+              <div class="empty">
+                <svg class="icon icon-lg" viewBox="0 0 24 24" style="opacity:0.4;"><path d="M20 6L9 17l-5-5"/></svg>
+                <div class="empty-title">Sin eventos hoy</div>
+                <div class="empty-sub">Los eventos aparecerán en tiempo real</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Alertas activas
+            </div>
+            <span class="chip chip-amber" id="alertCountChip">0 hoy</span>
+          </div>
+          <div class="card-body">
+            <div class="alert-list" id="alertList">
+              <div class="empty">
+                <svg class="icon icon-lg" viewBox="0 0 24 24" style="opacity:0.4;"><path d="M20 6L9 17l-5-5"/></svg>
+                <div class="empty-title">Sin alertas activas</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              Estado del sistema
+            </div>
+          </div>
+          <div class="card-body" style="padding-top:8px;padding-bottom:8px;">
+            <div class="sysmetric"><span class="sysmetric-label">Modelo FaceNet</span><span class="chip chip-green">512 dim</span></div>
+            <div class="sysmetric"><span class="sysmetric-label">Detector facial</span><span class="chip chip-blue">MTCNN</span></div>
+            <div class="sysmetric"><span class="sysmetric-label">Anti-spoofing</span><span class="chip chip-green">Activo</span></div>
+            <div class="sysmetric"><span class="sysmetric-label">Umbral confianza</span><span class="chip">85%</span></div>
+            <div class="sysmetric"><span class="sysmetric-label">Base de datos</span><span class="chip chip-green" id="dbStatus">Conectada</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════ CÁMARA ════════════ -->
+  <div class="page" id="page-camara">
+    <div class="cam-page">
+      <div class="cam-container">
+        <div class="cam-head">
+          <div class="cam-head-title">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            Cámara en vivo — Entrada principal
+          </div>
+          <div style="display:flex;gap:6px;">
+            <span class="chip chip-blue">MTCNN</span>
+            <span class="chip chip-blue">FaceNet</span>
+            <span class="chip chip-green"><span class="chip-dot"></span>Anti-spoofing</span>
+            <span class="chip chip-green" id="camLiveChip" style="display:none;"><span class="chip-dot"></span>En vivo</span>
+          </div>
+        </div>
+
+        <div class="camera-view" id="cameraView">
+          <video id="video" autoplay playsinline></video>
+          <canvas id="canvas-hidden"></canvas>
+          <div class="camera-empty" id="cameraEmpty">
+            <svg class="icon" viewBox="0 0 24 24" style="opacity:0.5;width:48px;height:48px;"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            <div>Cámara no activa</div>
+            <div style="font-size:11px;opacity:0.7;">Presione "Iniciar cámara" para comenzar</div>
+          </div>
+          <div class="face-box" id="faceBox" style="display:none;">
+            <div class="face-box-label" id="faceBoxLabel"><span id="faceBoxText">DETECTANDO</span></div>
+            <div class="face-box-conf" id="faceBoxConf">--</div>
+          </div>
+          <div class="cam-overlay">
+            <div class="cam-chips">
+              <span class="cam-chip-dark">CAM-01 | ENTRADA PRINCIPAL</span>
+              <span class="cam-chip-dark">HD 1280×720</span>
+              <span class="cam-chip-dark" id="camChipTime">--:--:--</span>
+            </div>
+            <div class="cam-rec" id="recIndicator" style="display:none;">REC</div>
+          </div>
+        </div>
+
+        <div class="cam-footer">
+          <div class="cam-footer-info">
+            <span>Pipeline:</span>
+            <code>OpenCV</code><span>→</span><code>MTCNN</code><span>→</span>
+            <code>Anti-spoofing</code><span>→</span><code>FaceNet</code><span>→</span><code>FastAPI</code>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-primary btn-sm" id="btnIniciar" onclick="iniciarCamara()">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Iniciar cámara
+            </button>
+            <button class="btn btn-outline btn-sm" id="btnDetener" onclick="detenerCamara()" disabled>
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+              Pausar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-card" id="resultCardAuth">
+          <div class="result-banner success">
+            <div class="result-banner-title">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span id="authTitle">Apoderado AUTORIZADO</span>
+            </div>
+            <div class="result-banner-sub" id="authSub">Esperando verificación...</div>
+          </div>
+          <div class="result-body">
+            <div id="authEmpty">
+              <div class="empty">
+                <svg class="icon icon-lg" viewBox="0 0 24 24" style="opacity:0.4;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <div class="empty-title">Sin verificación reciente</div>
+                <div class="empty-sub">Inicie la cámara para procesar rostros</div>
+              </div>
+            </div>
+            <div id="authContent" style="display:none;">
+              <div class="person-row">
+                <div class="person-avatar" id="authAvatar">--</div>
+                <div style="flex:1;min-width:0;">
+                  <div class="person-name" id="authName">--</div>
+                  <div class="person-meta" id="authMeta">--</div>
+                </div>
+              </div>
+              <div class="confidence-row">
+                <span class="confidence-label">Nivel de confianza</span>
+                <span class="confidence-val high" id="authConfVal">--</span>
+              </div>
+              <div class="bar"><div class="bar-fill" id="authConfBar" style="width:0%;"></div></div>
+              <div class="threshold-hint" id="authThreshold">Umbral mínimo: 85%</div>
+              <div style="margin-top:14px;display:flex;flex-direction:column;gap:6px;">
+                <button class="btn btn-success btn-full" onclick="confirmarRecojo()">
+                  <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><polyline points="20 6 9 17 4 12"/></svg>
+                  Confirmar recojo — registrar en historial
+                </button>
+                <button class="btn btn-outline btn-full" id="btnContinuarEscaneando" onclick="continuarEscaneando()">
+                  <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                  Continuar escaneando
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-card" id="resultCardAlert">
+          <div class="result-banner danger">
+            <div class="result-banner-title">
+              <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              <span id="alertTitle">Persona NO AUTORIZADA</span>
+            </div>
+            <div class="result-banner-sub" id="alertSub">Esperando verificación...</div>
+          </div>
+          <div class="result-body">
+            <div id="alertEmpty">
+              <div class="empty">
+                <svg class="icon icon-lg" viewBox="0 0 24 24" style="opacity:0.4;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
+                <div class="empty-title">Sin alertas activas</div>
+                <div class="empty-sub">El sistema notifica intentos no autorizados</div>
+              </div>
+            </div>
+            <div id="alertContent" style="display:none;">
+              <div class="person-row">
+                <div class="person-avatar danger" id="alertAvatar">?</div>
+                <div style="flex:1;min-width:0;">
+                  <div class="person-name" id="alertName">Identidad desconocida</div>
+                  <div class="person-meta" id="alertMeta">No encontrado en base de datos</div>
+                </div>
+              </div>
+              <div class="alert-notification">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                <span id="alertNotifText">Personal de turno notificado</span>
+              </div>
+              <div class="confidence-row">
+                <span class="confidence-label">Nivel de confianza</span>
+                <span class="confidence-val low" id="alertConfVal">--</span>
+              </div>
+              <div class="bar"><div class="bar-fill low" id="alertConfBar" style="width:0%;"></div></div>
+              <div class="threshold-hint">Umbral mínimo: 85% — No alcanza el umbral</div>
+              <div style="margin-top:14px;">
+                <button class="btn btn-danger btn-full" onclick="llamarDireccion()">
+                  <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  Llamar dirección
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════ ESTUDIANTES ════════════ -->
+  <div class="page" id="page-estudiantes">
+    <div class="page-head">
+      <div class="page-head-info">
+        <h2>Estudiantes registrados</h2>
+        <p id="estudiantesSummary">0 estudiantes — nivel inicial</p>
+      </div>
+      <button class="btn btn-primary" onclick="abrirModalEstudiante()">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Registrar nuevo estudiante
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="table-toolbar">
+        <div class="search-box">
+          <svg class="icon icon-sm search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="search-input" id="searchEstudiantes" oninput="filtrarEstudiantes()" placeholder="Buscar por nombre del estudiante...">
+        </div>
+        <select class="filter-select" id="filterAula" onchange="filtrarEstudiantes()">
+          <option value="">Todas las aulas</option>
+        </select>
+        <select class="filter-select" id="filterEstado" onchange="filtrarEstudiantes()">
+          <option value="">Todos los estados</option>
+          <option value="presente">Presentes</option>
+          <option value="recogido">Recogidos</option>
+        </select>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Estudiante</th>
+              <th>Aula / Sección</th>
+              <th>Turno</th>
+              <th>Edad</th>
+              <th>Apoderados</th>
+              <th>Estado hoy</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="estudiantesTbody">
+            <tr><td colspan="7"><div class="empty"><svg class="icon icon-lg" viewBox="0 0 24 24" style="opacity:0.4;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/></svg><div class="empty-title">Sin estudiantes registrados</div><div class="empty-sub">Use el botón "Registrar nuevo estudiante"</div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-footer">
+        <span id="estudiantesFooterInfo">Mostrando 0 de 0 estudiantes</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════ APODERADOS ════════════ -->
+  <div class="page" id="page-apoderados">
+    <div class="page-head">
+      <div class="page-head-info">
+        <h2>Apoderados registrados</h2>
+        <p id="apoderadosSummary">0 con foto — 0 pendientes</p>
+      </div>
+      <button class="btn btn-primary" onclick="abrirModalApoderado()">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Registrar apoderado
+      </button>
+    </div>
+
+    <div class="mini-stats">
+      <div class="mini-stat">
+        <div class="mini-stat-label">Total apoderados</div>
+        <div class="mini-stat-value" id="apoderadosTotal">0</div>
+        <div class="mini-stat-sub">registrados en el sistema</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-label">Con foto completa</div>
+        <div class="mini-stat-value green" id="apoderadosCompletos">0</div>
+        <div class="mini-stat-sub">embeddings generados</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-label">Sin foto / pendiente</div>
+        <div class="mini-stat-value amber" id="apoderadosPendientes">0</div>
+        <div class="mini-stat-sub">no pueden ser verificados</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-toolbar">
+        <div class="search-box">
+          <svg class="icon icon-sm search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="search-input" id="searchApoderados" oninput="filtrarApoderados()" placeholder="Buscar apoderado por nombre o DNI...">
+        </div>
+        <select class="filter-select" id="filterApoderadoEstado" onchange="filtrarApoderados()">
+          <option value="">Todos</option>
+          <option value="activo">Activos</option>
+          <option value="pendiente">Pendientes</option>
+        </select>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Apoderado</th>
+              <th>DNI</th>
+              <th>Parentesco</th>
+              <th>Estudiante a cargo</th>
+              <th>Embedding</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="apoderadosTbody">
+            <tr><td colspan="7"><div class="empty"><svg class="icon icon-lg" viewBox="0 0 24 24" style="opacity:0.4;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><div class="empty-title">Sin apoderados registrados</div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-footer">
+        <span id="apoderadosFooterInfo">Mostrando 0 apoderados</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════ AULAS ════════════ -->
+  <div class="page" id="page-aulas">
+    <div class="page-head">
+      <div class="page-head-info">
+        <h2>Aulas registradas</h2>
+        <p>Gestione las aulas y secciones del nivel inicial</p>
+      </div>
+      <button class="btn btn-primary" onclick="abrirModalAula()">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Crear nueva aula
+      </button>
+    </div>
+
+    <div class="aulas-grid" id="aulasGrid">
+      <!-- las aulas se renderizan aquí dinámicamente -->
+    </div>
+  </div>
+
+  <!-- ════════════ HISTORIAL ════════════ -->
+  <div class="page" id="page-historial">
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap kpi-blue">
+          <svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-label">Total verificaciones</div>
+          <div class="kpi-value" id="histTotal">0</div>
+          <div class="kpi-sub" id="histTotalSub">hoy</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap kpi-green">
+          <svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-label">Autorizados</div>
+          <div class="kpi-value kpi-value-green" id="histAuth">0</div>
+          <div class="kpi-sub" id="histAuthSub">0% del total</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap kpi-red">
+          <svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-label">Alertas</div>
+          <div class="kpi-value kpi-value-red" id="histAlerts">0</div>
+          <div class="kpi-sub">no autorizados</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap kpi-amber">
+          <svg class="icon icon-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-label">Tiempo promedio</div>
+          <div class="kpi-value" id="histAvgTime">0.0<span style="font-size:18px;font-weight:600;color:var(--text-2);">s</span></div>
+          <div class="kpi-sub">por verificación</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Registro de todos los eventos
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-outline btn-sm" onclick="exportarHistorial('pdf')">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar PDF
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="exportarHistorial('excel')">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar Excel
+          </button>
+        </div>
+      </div>
+
+      <div class="table-toolbar">
+        <input type="date" class="date-input" id="histFiltroFecha" onchange="filtrarHistorial()">
+        <select class="filter-select" id="histFiltroTipo" onchange="filtrarHistorial()">
+          <option value="">Todos los eventos</option>
+          <option value="autorizado">Reconocidos</option>
+          <option value="recojo_confirmado">Recojos confirmados</option>
+          <option value="no_autorizado">No autorizados</option>
+          <option value="spoofing_detectado">Suplantación</option>
+        </select>
+        <div class="search-box">
+          <svg class="icon icon-sm search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="search-input" id="histBuscar" oninput="filtrarHistorial()" placeholder="Buscar nombre o aula...">
+        </div>
+      </div>
+
+      <div class="history-list" id="historyList">
+        <div class="empty">
+          <svg class="icon icon-lg" viewBox="0 0 24 24" style="opacity:0.4;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <div class="empty-title">Sin eventos registrados</div>
+          <div class="empty-sub">Los eventos del sistema aparecerán aquí</div>
+        </div>
+      </div>
+
+      <div class="table-footer">
+        <span id="historyFooterInfo">Mostrando 0 eventos</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════ ESTADÍSTICAS ════════════ -->
+  <div class="page" id="page-estadisticas">
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap kpi-green">
+          <svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 5-3.5 9-9 9s-9-4-9-9 3.5-9 9-9 9 4 9 9z"/></svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-label">Precisión FaceNet</div>
+          <div class="kpi-value kpi-value-green">99.2%</div>
+          <div class="kpi-sub">VGGFace2 — embeddings 512D</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap kpi-blue">
+          <svg class="icon icon-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"/></svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-label">Precisión MTCNN</div>
+          <div class="kpi-value" style="color:var(--primary);">95.0%</div>
+          <div class="kpi-sub">detección facial</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap kpi-amber">
+          <svg class="icon icon-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-label">Tiempo respuesta</div>
+          <div class="kpi-value" id="statAvgTime">0.4<span style="font-size:18px;font-weight:600;color:var(--text-2);">s</span></div>
+          <div class="kpi-sub">promedio del sistema</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap kpi-purple">
+          <svg class="icon icon-lg" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <div class="kpi-content">
+          <div class="kpi-label">Efectividad total</div>
+          <div class="kpi-value" id="statEfectividad">0%</div>
+          <div class="kpi-sub">verificaciones OK</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-grid-2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            Verificaciones por hora — Hoy
+          </div>
+          <span class="chip chip-blue" id="totalHoyChip">0 hoy</span>
+        </div>
+        <div class="card-body">
+          <div class="bar-chart" id="barChartHoras">
+            <div class="empty">
+              <div class="empty-title">Sin datos suficientes</div>
+              <div class="empty-sub">Los gráficos se actualizan al haber verificaciones</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg class="icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Rendimiento del modelo IA
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="metric-row">
+            <div class="metric-row-head">
+              <span class="metric-row-label">Precisión FaceNet</span>
+              <span class="metric-row-value green">99.2%</span>
+            </div>
+            <div class="metric-row-bar"><div class="metric-row-bar-fill green" style="width:99.2%;"></div></div>
+          </div>
+
+          <div class="metric-row">
+            <div class="metric-row-head">
+              <span class="metric-row-label">Detección MTCNN</span>
+              <span class="metric-row-value green">95.0%</span>
+            </div>
+            <div class="metric-row-bar"><div class="metric-row-bar-fill green" style="width:95%;"></div></div>
+          </div>
+
+          <div class="metric-row">
+            <div class="metric-row-head">
+              <span class="metric-row-label">Anti-spoofing (ensemble)</span>
+              <span class="metric-row-value green">92.0%</span>
+            </div>
+            <div class="metric-row-bar"><div class="metric-row-bar-fill green" style="width:92%;"></div></div>
+          </div>
+
+          <div class="metric-row">
+            <div class="metric-row-head">
+              <span class="metric-row-label">Tasa autorización hoy</span>
+              <span class="metric-row-value blue" id="statTasaAuth">0%</span>
+            </div>
+            <div class="metric-row-bar"><div class="metric-row-bar-fill blue" id="barTasaAuth" style="width:0%;"></div></div>
+          </div>
+
+          <div class="metric-row">
+            <div class="metric-row-head">
+              <span class="metric-row-label">Velocidad respuesta</span>
+              <span class="metric-row-value blue" id="statVelocidad">0.4s prom.</span>
+            </div>
+            <div class="metric-row-bar"><div class="metric-row-bar-fill blue" id="barVelocidad" style="width:85%;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Resumen semanal
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Día</th>
+              <th>Total</th>
+              <th>Autorizados</th>
+              <th>Alertas</th>
+              <th>Precisión promedio</th>
+              <th>Tiempo prom.</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="resumenSemanalBody">
+            <!-- se llena con JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════ CONFIGURACIÓN ════════════ -->
+  <div class="page" id="page-configuracion">
+
+    <div class="page-head">
+      <div class="page-head-info">
+        <h2>Configuración del sistema</h2>
+        <p>Parámetros del motor de IA, cámara, alertas y base de datos</p>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline" onclick="restablecerConfig()">
+          <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Restablecer valores
+        </button>
+        <button class="btn btn-primary" onclick="guardarConfig()">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Guardar cambios
+        </button>
+      </div>
+    </div>
+
+    <div class="config-grid">
+
+      <!-- COLUMNA IZQUIERDA -->
+      <div style="display:flex;flex-direction:column;gap:14px;">
+
+        <!-- CONFIGURACIÓN DEL MODELO IA -->
+        <div class="config-card">
+          <div class="config-card-header">
+            <div class="config-card-title">
+              <svg class="icon icon-sm config-card-title-icon" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v12a3 3 0 1 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 12a3 3 0 0 0-3-3"/><path d="M5 12a3 3 0 0 1 3-3"/></svg>
+              Configuración del modelo IA
+            </div>
+          </div>
+          <div class="config-card-body">
+
+            <div class="config-field">
+              <label class="config-field-label">Algoritmo de reconocimiento facial</label>
+              <select class="form-control" id="cfgModelo">
+                <option value="facenet512" selected>FaceNet — Inception ResNet V1 (VGGFace2)</option>
+                <option value="facenet128" disabled>FaceNet 128D — versión legacy</option>
+                <option value="arcface" disabled>ArcFace (próxima versión)</option>
+              </select>
+              <div class="config-field-hint">Embeddings de 512 dimensiones — entrenado con VGGFace2 (3.3M imágenes)</div>
+            </div>
+
+            <div class="config-field">
+              <label class="config-field-label">Detector de rostros</label>
+              <select class="form-control" id="cfgDetector">
+                <option value="mtcnn" selected>MTCNN — Multi-task Cascaded CNN (recomendado)</option>
+                <option value="haar" disabled>Haar Cascade (legacy)</option>
+              </select>
+              <div class="config-field-hint">Detecta rostros con 3 redes neuronales en cascada (P-Net, R-Net, O-Net)</div>
+            </div>
+
+            <div class="config-field">
+              <label class="config-field-label">Umbral mínimo de confianza — distancia euclidiana</label>
+              <div class="slider-wrap">
+                <span class="slider-current" id="thresholdLabel" style="left:50%;">0.60</span>
+                <input type="range" class="slider-input" id="cfgUmbral" min="0.30" max="1.00" step="0.05" value="0.60" oninput="actualizarSliderUmbral()">
+                <div class="slider-labels">
+                  <span>0.30 más permisivo</span>
+                  <span>1.00 más estricto</span>
+                </div>
+              </div>
+              <div class="config-field-help">
+                <svg class="icon icon-sm" viewBox="0 0 24 24" style="margin-top:1px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <div>La distancia euclidiana entre dos embeddings determina si son la misma persona. Valor recomendado: <strong>0.6</strong>. Más bajo = más permisivo (más falsos positivos), más alto = más estricto (más rechazos legítimos).</div>
+              </div>
+            </div>
+
+            <div class="config-field">
+              <label class="config-field-label">Anti-spoofing (detección de suplantación)</label>
+              <select class="form-control" id="cfgAntispoof">
+                <option value="ensemble" selected>Activado — Ensemble de 3 técnicas</option>
+                <option value="off">Desactivado (no recomendado)</option>
+              </select>
+              <div class="config-field-hint">Detecta fotos/pantallas mediante: análisis LBP de textura + reflejos especulares + nitidez</div>
+            </div>
+
+            <div class="config-field">
+              <label class="config-field-label">Votos mínimos para detectar spoof</label>
+              <select class="form-control" id="cfgVotos">
+                <option value="1">1 de 3 (más estricto, más falsos positivos)</option>
+                <option value="2" selected>2 de 3 (recomendado — balance)</option>
+                <option value="3">3 de 3 (más permisivo)</option>
+              </select>
+              <div class="config-field-hint">Cuántas técnicas deben detectar spoof para rechazar</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ALERTAS Y NOTIFICACIONES -->
+        <div class="config-card">
+          <div class="config-card-header">
+            <div class="config-card-title">
+              <svg class="icon icon-sm config-card-title-icon" viewBox="0 0 24 24"><path d="M22 17h-2.5l-1.5 3-3-6-3 6-1.5-3H8"/><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><polyline points="14 2 14 8 20 8"/></svg>
+              Alertas y notificaciones
+            </div>
+          </div>
+          <div class="config-card-body">
+
+            <div class="config-field">
+              <label class="config-field-label">Alerta visual en pantalla del panel</label>
+              <select class="form-control" id="cfgAlertaVisual">
+                <option value="immediate" selected>Activada — inmediata al detectar no autorizado</option>
+                <option value="confirm">Activada — requiere confirmación del personal</option>
+                <option value="off">Desactivada</option>
+              </select>
+            </div>
+
+            <div class="config-field">
+              <label class="config-field-label">Alerta sonora en el colegio</label>
+              <select class="form-control" id="cfgAlertaSonora">
+                <option value="off" selected>Desactivada (no implementada)</option>
+                <option value="buzzer" disabled>Activada — buzzer físico (requiere hardware)</option>
+              </select>
+              <div class="config-field-hint">Requiere conectar un módulo buzzer mediante GPIO o relé USB</div>
+            </div>
+
+            <div class="config-field">
+              <label class="config-field-label">Notificación por correo (futuro)</label>
+              <input type="email" class="form-control" id="cfgCorreo" placeholder="director@ie-inicial-pm.edu.pe" disabled>
+              <div class="config-field-hint">Funcionalidad planificada para Fase 2 — requiere servidor SMTP</div>
+            </div>
+
+            <div class="config-field">
+              <label class="config-field-label">Guardar captura cuando se genere alerta</label>
+              <select class="form-control" id="cfgGuardarCaptura">
+                <option value="off" selected>No guardar (privacidad de menores)</option>
+                <option value="auth">Solo en autorizados</option>
+                <option value="all">Todas las verificaciones</option>
+              </select>
+              <div class="config-field-hint">Se almacenarían en data/capturas/ con cifrado AES</div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- COLUMNA DERECHA -->
+      <div style="display:flex;flex-direction:column;gap:14px;">
+
+        <!-- CONFIGURACIÓN DE CÁMARA -->
+        <div class="config-card">
+          <div class="config-card-header">
+            <div class="config-card-title">
+              <svg class="icon icon-sm config-card-title-icon" viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              Configuración de cámara
+            </div>
+          </div>
+          <div class="config-card-body">
+
+            <div class="config-field">
+              <label class="config-field-label">Fuente de video</label>
+              <select class="form-control" id="cfgFuente">
+                <option value="webcam" selected>Webcam local del navegador (HTTPS)</option>
+                <option value="ip" disabled>Cámara IP (configuración futura)</option>
+                <option value="rtsp" disabled>RTSP Stream (configuración futura)</option>
+              </select>
+              <div class="config-field-hint">Actualmente se usa la cámara del dispositivo donde corre el navegador</div>
+            </div>
+
+            <div class="config-field">
+              <label class="config-field-label">Resolución de captura</label>
+              <select class="form-control" id="cfgResolucion">
+                <option value="640x480">640×480 (rápido, menor precisión)</option>
+                <option value="1280x720" selected>1280×720 HD (recomendado)</option>
+                <option value="1920x1080">1920×1080 Full HD (preciso, lento en CPU)</option>
+              </select>
+              <div class="config-field-hint">Resoluciones mayores aumentan precisión pero ralentizan el procesamiento</div>
+            </div>
+
+            <div class="config-field">
+              <label class="config-field-label">Intervalo entre verificaciones (segundos)</label>
+              <select class="form-control" id="cfgIntervalo">
+                <option value="1">1 segundo (uso intensivo de CPU)</option>
+                <option value="2" selected>2 segundos (recomendado)</option>
+                <option value="3">3 segundos (ahorro de recursos)</option>
+                <option value="5">5 segundos (modo eco)</option>
+              </select>
+            </div>
+
+            <div class="config-field">
+              <label class="config-field-label">Ajuste automático de iluminación</label>
+              <select class="form-control" id="cfgIluminacion">
+                <option value="clahe" selected>Activado — OpenCV CLAHE (adaptativo)</option>
+                <option value="off">Desactivado (usar imagen original)</option>
+              </select>
+              <div class="config-field-help">
+                <svg class="icon icon-sm" viewBox="0 0 24 24" style="margin-top:1px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <div>CLAHE (Contrast Limited Adaptive Histogram Equalization) mejora la detección facial en condiciones de iluminación irregular, aplicando ajuste solo en regiones locales de la imagen.</div>
+              </div>
+            </div>
+
+            <div class="config-field">
+              <label class="config-field-label">Espejar imagen horizontalmente</label>
+              <select class="form-control" id="cfgEspejo">
+                <option value="on" selected>Sí (apariencia de espejo, recomendado)</option>
+                <option value="off">No (imagen original)</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- BASE DE DATOS Y ALMACENAMIENTO -->
+        <div class="config-card">
+          <div class="config-card-header">
+            <div class="config-card-title">
+              <svg class="icon icon-sm config-card-title-icon" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+              Base de datos y almacenamiento
+            </div>
+          </div>
+          <div class="config-card-body">
+
+            <div class="system-status-card ok" id="cfgStatusJson">
+              <div class="system-status-icon">
+                <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="system-status-content">
+                <div class="system-status-title">Base de datos JSON — Conectada</div>
+                <div class="system-status-meta" id="cfgJsonPath">data/database/ — local, sin red</div>
+              </div>
+            </div>
+
+            <div class="system-status-card warning">
+              <div class="system-status-icon">
+                <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div class="system-status-content">
+                <div class="system-status-title">MySQL — No configurado</div>
+                <div class="system-status-meta">Planificado para Fase 2 del proyecto</div>
+              </div>
+            </div>
+
+            <div class="system-status-card ok">
+              <div class="system-status-icon">
+                <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/></svg>
+              </div>
+              <div class="system-status-content">
+                <div class="system-status-title">Almacenamiento on-premise</div>
+                <div class="system-status-meta">Sin nube — privacidad de menores garantizada</div>
+              </div>
+            </div>
+
+            <div class="config-field" style="margin-top:14px;">
+              <label class="config-field-label">Backup automático de la base de datos</label>
+              <select class="form-control" id="cfgBackup">
+                <option value="daily" selected>Diario — 11:00 p.m.</option>
+                <option value="weekly">Semanal — domingos</option>
+                <option value="manual">Solo manual</option>
+                <option value="off">Desactivado (no recomendado)</option>
+              </select>
+              <div class="config-field-hint">Los backups se guardan en data/backups/ con timestamp</div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="config-actions-bar">
+      <div class="config-actions-info">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="cfgLastSaved">Sin cambios pendientes</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline" onclick="exportarConfig()">
+          <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar configuración
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  </div>
+</main>
+</div>
+</div>
+
+<!-- ============= MODAL: APODERADO ============= -->
+<div class="modal-backdrop" id="modalApoderado">
+  <div class="modal" id="modalApoderadoInner">
+    <div class="modal-titlebar" id="modalApoderadoTitlebar">
+      <div class="modal-titlebar-title">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        Registrar nuevo apoderado
+      </div>
+      <div class="modal-titlebar-controls">
+        <button class="titlebar-btn" onclick="minimizarModal('modalApoderadoInner')" title="Minimizar"><svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+        <button class="titlebar-btn" onclick="maximizarModal('modalApoderadoInner')" title="Maximizar"><svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><rect x="3" y="3" width="18" height="18" rx="1"/></svg></button>
+        <button class="titlebar-btn close" onclick="cerrarModal('modalApoderado')" title="Cerrar"><svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">
+          <svg class="icon icon-sm modal-section-title-icon" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>
+          Datos personales del apoderado
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nombres <span class="req">*</span></label>
+            <input type="text" class="form-control" id="apoNombres" placeholder="Ej: Rosa Elena">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Apellidos <span class="req">*</span></label>
+            <input type="text" class="form-control" id="apoApellidos" placeholder="Ej: Quispe Apaza">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">DNI <span class="req">*</span></label>
+            <input type="text" class="form-control" id="apoDni" placeholder="12345678" maxlength="8">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Teléfono</label>
+            <input type="text" class="form-control" id="apoTelefono" placeholder="987654321">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Parentesco <span class="req">*</span></label>
+            <select class="form-control" id="apoParentesco">
+              <option value="">Seleccionar...</option>
+              <option value="Madre">Madre</option>
+              <option value="Padre">Padre</option>
+              <option value="Abuela">Abuela</option>
+              <option value="Abuelo">Abuelo</option>
+              <option value="Tía">Tía</option>
+              <option value="Tío">Tío</option>
+              <option value="Tutor/a">Tutor/a</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Estudiante a cargo</label>
+            <select class="form-control" id="apoEstudiante">
+              <option value="">Seleccionar...</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">
+          <svg class="icon icon-sm modal-section-title-icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Foto para reconocimiento facial — FaceNet
+        </div>
+        <div class="info-box">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div><strong>Tome una foto con la cámara o suba una imagen desde el dispositivo.</strong> FaceNet generará un embedding de 512 dimensiones para verificar su identidad.</div>
+        </div>
+        <div class="form-row">
+          <div>
+            <div class="photo-capture" id="apoPhotoArea">
+              <video id="apoVideo" autoplay playsinline></video>
+              <img id="apoPreview" style="display:none;width:100%;height:100%;object-fit:cover;">
+              <div class="photo-capture-empty" id="apoEmpty">
+                <svg class="icon" viewBox="0 0 24 24" style="opacity:0.5;width:40px;height:40px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <div>Presione "Iniciar cámara" para capturar</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+              <button class="btn btn-primary btn-sm" id="apoBtnInit" onclick="apoIniciarCam()">
+                <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Iniciar cámara
+              </button>
+              <button class="btn btn-success btn-sm" id="apoBtnCapture" onclick="apoCapturar()" disabled>
+                <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Capturar
+              </button>
+              <button class="btn btn-ghost btn-sm" id="apoBtnReset" onclick="apoResetear()" disabled>
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                Re-tomar
+              </button>
+            </div>
+            <!-- Separador "o" + Botón subir foto desde galería -->
+            <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px 0;">
+              <div style="flex:1;height:1px;background:var(--border);"></div>
+              <span style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;">o</span>
+              <div style="flex:1;height:1px;background:var(--border);"></div>
+            </div>
+            <button class="btn btn-outline btn-sm" style="width:100%;justify-content:center;" onclick="document.getElementById('apoArchivoInput').click()">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Subir foto desde galería o archivo
+            </button>
+            <input type="file" id="apoArchivoInput" accept="image/jpeg,image/png,image/jpg" style="display:none;" onchange="apoSubirArchivo(event)">
+          </div>
+          <div>
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;height:100%;display:flex;flex-direction:column;justify-content:center;">
+              <div style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;margin-bottom:10px;">Recomendaciones</div>
+              <ul style="font-size:11px;color:var(--text-2);line-height:1.8;padding-left:16px;">
+                <li>Rostro de frente, mirando a la cámara</li>
+                <li>Iluminación clara y uniforme</li>
+                <li>Sin lentes oscuros ni mascarilla</li>
+                <li>Fondo simple (pared lisa)</li>
+                <li>Expresión neutra</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modalApoderado')">Cancelar</button>
+      <button class="btn btn-primary" id="btnGuardarApoderado" onclick="guardarApoderado()" disabled>
+        <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Guardar y generar embedding facial
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============= MODAL: ESTUDIANTE ============= -->
+<div class="modal-backdrop" id="modalEstudiante">
+  <div class="modal" id="modalEstudianteInner" style="max-width:700px;">
+    <div class="modal-titlebar">
+      <div class="modal-titlebar-title">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+        Registrar nuevo estudiante
+      </div>
+      <div class="modal-titlebar-controls">
+        <button class="titlebar-btn" onclick="minimizarModal('modalEstudianteInner')" title="Minimizar">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button class="titlebar-btn" onclick="maximizarModal('modalEstudianteInner')" title="Maximizar">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>
+        </button>
+        <button class="titlebar-btn close" onclick="cerrarModal('modalEstudiante')" title="Cerrar">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-section-title" style="margin-bottom:18px;">Registrar nuevo estudiante</div>
+      <p style="font-size:12px;color:var(--text-2);margin-bottom:18px;">Complete los datos del niño o niña que ingresará al sistema</p>
+
+      <div class="modal-section">
+        <div class="modal-section-title">
+          <svg class="icon icon-sm modal-section-title-icon" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>
+          Datos personales
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nombres <span class="req">*</span></label>
+            <input type="text" class="form-control" id="estNombres" placeholder="Ej: Ana Lucía">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Apellidos <span class="req">*</span></label>
+            <input type="text" class="form-control" id="estApellidos" placeholder="Ej: Condori Flores">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Fecha de nacimiento <span class="req">*</span></label>
+            <input type="date" class="form-control" id="estFechaNac">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sexo <span class="req">*</span></label>
+            <select class="form-control" id="estSexo">
+              <option value="">Seleccionar...</option>
+              <option value="F">Femenino</option>
+              <option value="M">Masculino</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">DNI del estudiante</label>
+            <input type="text" class="form-control" id="estDni" placeholder="Opcional" maxlength="8">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Código de matrícula <span class="req">*</span></label>
+            <input type="text" class="form-control" id="estMatricula" placeholder="Ej: 2026-001">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">
+          <svg class="icon icon-sm modal-section-title-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Datos escolares
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Aula <span class="req">*</span></label>
+            <select class="form-control" id="estAula" onchange="actualizarSecciones()">
+              <option value="">Seleccionar aula...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sección <span class="req">*</span></label>
+            <select class="form-control" id="estSeccion">
+              <option value="">Seleccionar...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Turno <span class="req">*</span></label>
+          <select class="form-control" id="estTurno">
+            <option value="">Seleccionar turno...</option>
+            <option value="Mañana">Mañana (7:30 - 12:30)</option>
+            <option value="Tarde">Tarde (13:30 - 17:30)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modalEstudiante')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEstudiante()">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg>
+        Guardar estudiante
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============= MODAL: AULA ============= -->
+<div class="modal-backdrop" id="modalAula">
+  <div class="modal" id="modalAulaInner" style="max-width:520px;">
+    <div class="modal-titlebar">
+      <div class="modal-titlebar-title">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Crear nueva aula
+      </div>
+      <div class="modal-titlebar-controls">
+        <button class="titlebar-btn close" onclick="cerrarModal('modalAula')" title="Cerrar">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre del aula <span class="req">*</span></label>
+        <input type="text" class="form-control" id="aulaNombre" placeholder="Ej: Mariposas, Pollitos, Ositos">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Edad <span class="req">*</span></label>
+          <select class="form-control" id="aulaEdad">
+            <option value="">Seleccionar...</option>
+            <option value="3">3 años</option>
+            <option value="4">4 años</option>
+            <option value="5">5 años</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Color identificador</label>
+          <select class="form-control" id="aulaColor">
+            <option value="blue">Azul</option>
+            <option value="green">Verde</option>
+            <option value="amber">Amarillo</option>
+            <option value="purple">Morado</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Secciones <span class="req">*</span></label>
+        <div style="display:flex;gap:8px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;"><input type="checkbox" value="A" class="seccionCheck" checked> Sección A</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;"><input type="checkbox" value="B" class="seccionCheck"> Sección B</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;"><input type="checkbox" value="C" class="seccionCheck"> Sección C</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modalAula')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarAula()">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Crear aula
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====================================================
+// CONFIGURACIÓN Y ESTADO
+// ====================================================
+const API_URL = window.location.origin.includes('localhost')
+  ? 'http://localhost:8000'
+  : window.location.origin;
+const INTERVALO_VERIFICACION = 2000;
+
+const CREDENCIALES = {
+  'admin': 'safepickup2026',
+  'director': 'director123'
+};
+
+// Datos persistidos en localStorage
+const STORAGE_AULAS = 'safepickup_aulas';
+const STORAGE_ESTUDIANTES = 'safepickup_estudiantes';
+
+let aulas = JSON.parse(localStorage.getItem(STORAGE_AULAS) || '[]');
+let estudiantes = JSON.parse(localStorage.getItem(STORAGE_ESTUDIANTES) || '[]');
+let apoderadosCache = [];
+
+// Crear aulas por defecto si no hay
+if(aulas.length === 0){
+  aulas = [
+    {id:1, nombre:'Mariposas', edad:3, secciones:['A','B'], color:'amber'},
+    {id:2, nombre:'Pollitos', edad:4, secciones:['A','B'], color:'green'},
+    {id:3, nombre:'Ositos', edad:5, secciones:['A'], color:'blue'},
+    {id:4, nombre:'Estrellitas', edad:4, secciones:['A','B','C'], color:'purple'}
+  ];
+  guardarAulas();
+}
+
+function guardarAulas(){ localStorage.setItem(STORAGE_AULAS, JSON.stringify(aulas)); }
+function guardarEstudiantes(){ localStorage.setItem(STORAGE_ESTUDIANTES, JSON.stringify(estudiantes)); }
+
+// ====================================================
+// LOGIN
+// ====================================================
+function hacerLogin(){
+  var user = document.getElementById('loginUser').value.trim();
+  var pass = document.getElementById('loginPass').value;
+  var errorEl = document.getElementById('loginError');
+  if(CREDENCIALES[user] && CREDENCIALES[user] === pass){
+    sessionStorage.setItem('safepickup_user', user);
+    mostrarApp(user);
+    errorEl.classList.remove('show');
+  } else {
+    errorEl.classList.add('show');
+  }
+}
+
+function mostrarApp(user){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  var nombre = user === 'admin' ? 'Directora Sánchez' : 'Director General';
+  var iniciales = nombre.split(' ').map(n=>n[0]).join('').slice(0,2);
+  document.getElementById('userName').textContent = nombre;
+  document.getElementById('userInitials').textContent = iniciales;
+
+  verificarBackend();
+  cargarEventos();
+  cargarApoderados();
+  renderAulas();
+  renderEstudiantes();
+}
+
+function cerrarSesion(){
+  if(confirm('¿Cerrar sesión?')){
+    detenerCamara();
+    sessionStorage.removeItem('safepickup_user');
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('app').classList.remove('show');
+    document.getElementById('loginUser').value = '';
+    document.getElementById('loginPass').value = '';
+  }
+}
+
+const userGuardado = sessionStorage.getItem('safepickup_user');
+if(userGuardado) mostrarApp(userGuardado);
+
+document.getElementById('loginPass').addEventListener('keypress', e => {
+  if(e.key === 'Enter') hacerLogin();
+});
+
+// ====================================================
+// NAVEGACIÓN
+// ====================================================
+const PAGE_TITLES = {
+  'dashboard':'Panel general','camara':'Cámara en vivo',
+  'estudiantes':'Estudiantes','apoderados':'Apoderados','aulas':'Aulas',
+  'historial':'Historial de eventos','estadisticas':'Estadísticas del sistema',
+  'configuracion':'Configuración del sistema'
+};
+const PAGE_BREADCRUMBS = {
+  'dashboard':'Inicio','camara':'Cámara en vivo',
+  'estudiantes':'Gestión › Estudiantes',
+  'apoderados':'Gestión › Apoderados',
+  'aulas':'Gestión › Aulas',
+  'historial':'Reportes › Historial',
+  'estadisticas':'Reportes › Estadísticas',
+  'configuracion':'Sistema › Configuración'
+};
+
+function navegar(page){
+  if(page !== 'camara') detenerCamara();
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  var el = document.getElementById('page-' + page);
+  if(el) el.classList.add('active');
+  var navEl = document.querySelector('.nav-item[data-page="' + page + '"]');
+  if(navEl) navEl.classList.add('active');
+  document.getElementById('pageTitle').textContent = PAGE_TITLES[page] || page;
+  document.getElementById('breadcrumb').textContent = PAGE_BREADCRUMBS[page] || page;
+
+  if(page === 'dashboard'){ verificarBackend(); cargarEventos(); }
+  if(page === 'estudiantes') renderEstudiantes();
+  if(page === 'apoderados'){ cargarApoderados(); }
+  if(page === 'aulas') renderAulas();
+  if(page === 'historial') cargarHistorialCompleto();
+  if(page === 'estadisticas') cargarEstadisticas();
+  if(page === 'configuracion') cargarConfiguracion();
+}
+
+function $(id){ return document.getElementById(id); }
+
+function tick(){
+  var now = new Date();
+  var t = now.toLocaleTimeString('es-PE', {hour12:false});
+  $('chipHora').textContent = t;
+  if($('camChipTime')) $('camChipTime').textContent = t;
+}
+setInterval(tick, 1000); tick();
+
+async function verificarBackend(){
+  try {
+    var res = await fetch(API_URL + '/api/estado');
+    if(res.ok){
+      var data = await res.json();
+      $('chipBackend').innerHTML = '<span class="chip-dot"></span>Backend activo';
+      $('chipBackend').className = 'chip chip-green';
+      $('statusDot').classList.remove('offline');
+      $('statusText').textContent = 'Sistema activo';
+      $('chipApoderados').textContent = data.apoderados_registrados + ' apoderados';
+      $('kpiApoderados').textContent = data.apoderados_registrados;
+      $('kpiEstudiantes').textContent = data.estudiantes_registrados || 0;
+      $('kpiAutorizados').textContent = data.eventos_hoy.recojos || 0;
+      var alertas = (data.eventos_hoy.rechazados || 0) + (data.eventos_hoy.spoofing || 0);
+      $('kpiAlertas').textContent = alertas;
+      if(alertas > 0){
+        $('navAlertBadge').style.display = 'inline-block';
+        $('navAlertBadge').textContent = alertas;
+        $('alertCountChip').textContent = alertas + ' hoy';
+      } else {
+        $('navAlertBadge').style.display = 'none';
+      }
+      return true;
+    }
+  } catch(e){
+    $('chipBackend').innerHTML = '<span class="chip-dot"></span>Sin conexión';
+    $('chipBackend').className = 'chip';
+    $('statusDot').classList.add('offline');
+    $('statusText').textContent = 'Sin conexión';
+    if($('dbStatus')){ $('dbStatus').textContent = 'Desconectada'; $('dbStatus').className = 'chip'; }
+    return false;
+  }
+}
+setInterval(verificarBackend, 5000);
+
+// ====================================================
+// MODALES
+// ====================================================
+function abrirModal(id){
+  $(id).classList.add('show');
+  // Reset estado de la ventana
+  var inner = $(id + 'Inner') || $(id).querySelector('.modal');
+  if(inner) inner.classList.remove('minimized', 'maximized');
+}
+
+function cerrarModal(id){
+  $(id).classList.remove('show');
+  // Detener cámaras de modales
+  if(id === 'modalApoderado') apoDetenerCam();
+}
+
+function minimizarModal(innerId){
+  var m = $(innerId);
+  m.classList.toggle('minimized');
+  m.classList.remove('maximized');
+}
+
+function maximizarModal(innerId){
+  var m = $(innerId);
+  m.classList.toggle('maximized');
+  m.classList.remove('minimized');
+}
+
+// Hacer modal arrastrable por la barra de título
+function makeDraggable(titlebarId, modalId){
+  var titlebar = $(titlebarId);
+  var modal = $(modalId);
+  if(!titlebar || !modal) return;
+  var dragging = false;
+  var offsetX = 0, offsetY = 0;
+  titlebar.addEventListener('mousedown', e => {
+    if(e.target.closest('.titlebar-btn')) return;
+    if(modal.classList.contains('maximized') || modal.classList.contains('minimized')) return;
+    dragging = true;
+    var rect = modal.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+    modal.style.position = 'fixed';
+    modal.style.margin = '0';
+  });
+  document.addEventListener('mousemove', e => {
+    if(!dragging) return;
+    modal.style.left = (e.clientX - offsetX) + 'px';
+    modal.style.top = (e.clientY - offsetY) + 'px';
+  });
+  document.addEventListener('mouseup', () => { dragging = false; });
+}
+
+makeDraggable('modalApoderadoTitlebar', 'modalApoderadoInner');
+
+// ====================================================
+// AULAS
+// ====================================================
+// AULAS — Conectado a MySQL
+// ====================================================
+var aulasCache = [];
+var editandoAulaId = null;
+
+async function cargarAulasDesdeMySQL(){
+  try {
+    var res = await fetch(API_URL + '/api/aulas');
+    var data = await res.json();
+    aulasCache = (data.aulas || []).map(a => ({
+      id: a.id,
+      nombre: a.nombre,
+      edad: a.edad,
+      secciones: typeof a.secciones === 'string' ? a.secciones.split(',') : (a.secciones || ['A']),
+      color: a.color || 'blue',
+      num_estudiantes: a.num_estudiantes || 0
+    }));
+    // Sincronizar con la variable global aulas para compatibilidad
+    aulas = aulasCache;
+    return aulasCache;
+  } catch(e){
+    console.error('Error cargando aulas:', e);
+    return [];
+  }
+}
+
+async function renderAulas(){
+  await cargarAulasDesdeMySQL();
+  var grid = $('aulasGrid');
+  if(!aulasCache.length){
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1;"><div class="empty-title">Sin aulas creadas</div><div class="empty-sub">Cree la primera aula con el botón superior</div></div>';
+    return;
+  }
+  grid.innerHTML = aulasCache.map(a => {
+    return `
+      <div class="aula-card">
+        <div class="aula-card-head">
+          <div class="aula-icon kpi-${a.color}">
+            <svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <div class="aula-info">
+            <div class="aula-name">${a.nombre}</div>
+            <div class="aula-edad">${a.edad} años · Nivel inicial</div>
+          </div>
+          <div class="row-actions" style="margin-left:auto;">
+            <button class="icon-btn" onclick="editarAula(${a.id})" title="Editar">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="icon-btn danger" onclick="eliminarAula(${a.id})" title="Eliminar">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="aula-secciones">
+          ${a.secciones.map(s => `<span class="aula-seccion-tag">Sección ${s}</span>`).join('')}
+        </div>
+        <div class="aula-stats">
+          <span class="aula-stat-label">Estudiantes:</span>
+          <span class="aula-stat-value">${a.num_estudiantes}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function abrirModalAula(){
+  editandoAulaId = null;
+  $('aulaNombre').value = '';
+  $('aulaEdad').value = '';
+  $('aulaColor').value = 'blue';
+  document.querySelectorAll('.seccionCheck').forEach((c,i) => c.checked = i === 0);
+  // Cambiar título de la barra si existe
+  var titulos = document.querySelectorAll('#modalAula .modal-titlebar-title');
+  if(titulos.length) titulos[0].innerHTML = '<svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Crear nueva aula';
+  abrirModal('modalAula');
+}
+
+function editarAula(id){
+  var a = aulasCache.find(x => x.id === id);
+  if(!a){ alert('Aula no encontrada'); return; }
+  editandoAulaId = id;
+  $('aulaNombre').value = a.nombre;
+  $('aulaEdad').value = a.edad;
+  $('aulaColor').value = a.color;
+  document.querySelectorAll('.seccionCheck').forEach(c => {
+    c.checked = a.secciones.includes(c.value);
+  });
+  // Cambiar título
+  var titulos = document.querySelectorAll('#modalAula .modal-titlebar-title');
+  if(titulos.length) titulos[0].innerHTML = '<svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/></svg> Editar aula';
+  abrirModal('modalAula');
+}
+
+async function guardarAula(){
+  var nombre = $('aulaNombre').value.trim();
+  var edad = parseInt($('aulaEdad').value);
+  var color = $('aulaColor').value;
+  var secciones = Array.from(document.querySelectorAll('.seccionCheck:checked')).map(c => c.value);
+
+  if(!nombre || !edad || !secciones.length){
+    alert('Complete todos los campos requeridos');
+    return;
+  }
+
+  try {
+    if(editandoAulaId){
+      // EDITAR
+      var res = await fetch(API_URL + '/api/aulas/' + editandoAulaId, {
+        method: 'PUT',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({nombre, edad, secciones, color})
+      });
+      if(!res.ok){ var d = await res.json(); throw new Error(d.detail || 'Error'); }
+    } else {
+      // CREAR
+      var res = await fetch(API_URL + '/api/aulas/registrar', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({nombre, edad, secciones, color})
+      });
+      if(!res.ok){ var d = await res.json(); throw new Error(d.detail || 'Error'); }
+    }
+    cerrarModal('modalAula');
+    editandoAulaId = null;
+    await renderAulas();
+  } catch(e){
+    alert('Error al guardar: ' + e.message);
+  }
+}
+
+async function eliminarAula(id){
+  var a = aulasCache.find(x => x.id === id);
+  if(!a){ return; }
+  if(a.num_estudiantes > 0){
+    alert('No se puede eliminar el aula "' + a.nombre + '" porque tiene ' + a.num_estudiantes + ' estudiantes asignados');
+    return;
+  }
+  if(!confirm('¿Eliminar el aula "' + a.nombre + '"?')) return;
+  try {
+    var res = await fetch(API_URL + '/api/aulas/' + id, {method:'DELETE'});
+    if(!res.ok){ var d = await res.json(); throw new Error(d.detail || 'Error'); }
+    await renderAulas();
+  } catch(e){
+    alert('Error al eliminar: ' + e.message);
+  }
+}
+
+// ====================================================
+// ESTUDIANTES — Conectado a MySQL
+// ====================================================
+var estudiantesCache = [];
+var editandoEstudianteId = null;
+
+async function cargarEstudiantesDesdeMySQL(){
+  try {
+    var res = await fetch(API_URL + '/api/estudiantes');
+    var data = await res.json();
+    estudiantesCache = data.estudiantes || [];
+    // Sincronizar variable global para compatibilidad
+    estudiantes = estudiantesCache;
+    return estudiantesCache;
+  } catch(e){
+    console.error('Error cargando estudiantes:', e);
+    return [];
+  }
+}
+
+async function renderEstudiantes(){
+  await cargarAulasDesdeMySQL();
+  await cargarEstudiantesDesdeMySQL();
+
+  var tbody = $('estudiantesTbody');
+  var summary = $('estudiantesSummary');
+  var footer = $('estudiantesFooterInfo');
+  var filterAula = $('filterAula');
+
+  // Llenar filtro de aulas
+  filterAula.innerHTML = '<option value="">Todas las aulas</option>' +
+    aulasCache.map(a => `<option value="${a.nombre}">${a.nombre}</option>`).join('');
+
+  summary.textContent = `${estudiantesCache.length} estudiantes — ${aulasCache.length} aulas — nivel inicial`;
+  footer.textContent = `Mostrando ${estudiantesCache.length} de ${estudiantesCache.length} estudiantes`;
+
+  if(!estudiantesCache.length){
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><svg class="icon icon-lg" viewBox="0 0 24 24" style="opacity:0.4;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/></svg><div class="empty-title">Sin estudiantes registrados</div><div class="empty-sub">Use el botón "Registrar nuevo estudiante"</div></div></td></tr>';
+    return;
+  }
+
+  filtrarEstudiantes();
+}
+
+function filtrarEstudiantes(){
+  var q = ($('searchEstudiantes').value || '').toLowerCase();
+  var aulaF = $('filterAula').value;
+  var estadoF = $('filterEstado').value;
+
+  var filtrados = estudiantesCache.filter(e => {
+    var nombreCompleto = (e.nombres || '') + ' ' + (e.apellidos || '');
+    if(q && !nombreCompleto.toLowerCase().includes(q)) return false;
+    if(aulaF && e.aula !== aulaF) return false;
+    if(estadoF && (e.estado_hoy || 'presente') !== estadoF) return false;
+    return true;
+  });
+
+  $('estudiantesFooterInfo').textContent = `Mostrando ${filtrados.length} de ${estudiantesCache.length} estudiantes`;
+
+  var tbody = $('estudiantesTbody');
+  if(!filtrados.length){
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="empty-title">Sin resultados</div></div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtrados.map(e => {
+    var nom = e.nombres || '';
+    var ape = e.apellidos || '';
+    var iniciales = ((nom[0] || '') + (ape[0] || '')).toUpperCase();
+    var edad = e.fecha_nac ? calcularEdad(e.fecha_nac) : '--';
+    var estado = e.estado_hoy || 'presente';
+    var badgeEstado = estado === 'recogido'
+      ? `<span class="badge badge-green">Recogido ${e.hora_recojo || ''}</span>`
+      : `<span class="badge badge-blue">Presente</span>`;
+    var aulaNombre = e.aula || '—';
+    var numApo = e.num_apoderados || 0;
+    return `
+      <tr>
+        <td>
+          <div class="cell-name">
+            <div class="cell-avatar">${iniciales}</div>
+            <div class="cell-info">
+              <div class="cell-primary">${nom} ${ape}</div>
+              <div class="cell-secondary">F.N.: ${e.fecha_nac ? formatearFecha(e.fecha_nac) : '--'}</div>
+            </div>
+          </div>
+        </td>
+        <td>${aulaNombre} ${e.seccion ? '— ' + e.seccion : ''}</td>
+        <td>${e.turno || ''}</td>
+        <td>${edad} años</td>
+        <td>${numApo > 0 ? `<span class="badge badge-green">${numApo} registrado${numApo > 1 ? 's' : ''}</span>` : `<span class="badge badge-red">0 sin foto</span>`}</td>
+        <td>${badgeEstado}</td>
+        <td>
+          <div class="row-actions">
+            <button class="icon-btn" onclick="editarEstudiante(${e.id})" title="Editar">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="icon-btn danger" onclick="eliminarEstudiante(${e.id})" title="Eliminar">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function calcularEdad(fechaNac){
+  var hoy = new Date();
+  var nac = new Date(fechaNac);
+  var edad = hoy.getFullYear() - nac.getFullYear();
+  var m = hoy.getMonth() - nac.getMonth();
+  if(m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--;
+  return edad;
+}
+
+function formatearFecha(f){
+  var d = new Date(f);
+  return d.toLocaleDateString('es-PE', {day:'2-digit', month:'2-digit', year:'numeric'});
+}
+
+async function abrirModalEstudiante(){
+  editandoEstudianteId = null;
+  await cargarAulasDesdeMySQL();
+  $('estNombres').value = '';
+  $('estApellidos').value = '';
+  $('estFechaNac').value = '';
+  $('estSexo').value = '';
+  $('estDni').value = '';
+  $('estMatricula').value = '';
+  $('estAula').innerHTML = '<option value="">Seleccionar aula...</option>' +
+    aulasCache.map(a => `<option value="${a.id}" data-secciones="${a.secciones.join(',')}">${a.nombre} (${a.edad} años)</option>`).join('');
+  $('estSeccion').innerHTML = '<option value="">Seleccionar...</option>';
+  $('estTurno').value = '';
+  abrirModal('modalEstudiante');
+}
+
+async function editarEstudiante(id){
+  await cargarEstudiantesDesdeMySQL();
+  await cargarAulasDesdeMySQL();
+  var e = estudiantesCache.find(x => x.id === id);
+  if(!e){ alert('Estudiante no encontrado'); return; }
+  editandoEstudianteId = id;
+  $('estNombres').value = e.nombres || '';
+  $('estApellidos').value = e.apellidos || '';
+  $('estFechaNac').value = e.fecha_nac || '';
+  $('estSexo').value = e.sexo || '';
+  $('estDni').value = e.dni || '';
+  $('estMatricula').value = e.matricula || '';
+  $('estAula').innerHTML = '<option value="">Seleccionar aula...</option>' +
+    aulasCache.map(a => `<option value="${a.id}" data-secciones="${a.secciones.join(',')}" ${a.id === e.aula_id ? 'selected' : ''}>${a.nombre} (${a.edad} años)</option>`).join('');
+  // Actualizar secciones según el aula
+  actualizarSecciones();
+  $('estSeccion').value = e.seccion || '';
+  $('estTurno').value = e.turno || '';
+  abrirModal('modalEstudiante');
+}
+
+function actualizarSecciones(){
+  var opt = $('estAula').selectedOptions[0];
+  if(!opt || !opt.dataset.secciones){
+    $('estSeccion').innerHTML = '<option value="">Seleccionar...</option>';
+    return;
+  }
+  var secs = opt.dataset.secciones.split(',');
+  $('estSeccion').innerHTML = '<option value="">Seleccionar...</option>' +
+    secs.map(s => `<option value="${s}">Sección ${s}</option>`).join('');
+}
+
+async function guardarEstudiante(){
+  var nombres = $('estNombres').value.trim();
+  var apellidos = $('estApellidos').value.trim();
+  var fechaNac = $('estFechaNac').value;
+  var sexo = $('estSexo').value;
+  var dni = $('estDni').value.trim();
+  var matricula = $('estMatricula').value.trim();
+  var aulaId = parseInt($('estAula').value);
+  var seccion = $('estSeccion').value;
+  var turno = $('estTurno').value;
+
+  if(!nombres || !apellidos || !fechaNac || !sexo || !matricula || !aulaId || !seccion || !turno){
+    alert('Complete todos los campos requeridos');
+    return;
+  }
+
+  var body = {
+    nombres, apellidos,
+    fecha_nac: fechaNac,
+    sexo, dni: dni || null,
+    matricula,
+    aula_id: aulaId,
+    seccion, turno
+  };
+
+  try {
+    var url, method;
+    if(editandoEstudianteId){
+      url = API_URL + '/api/estudiantes/' + editandoEstudianteId;
+      method = 'PUT';
+    } else {
+      url = API_URL + '/api/estudiantes/registrar';
+      method = 'POST';
+    }
+    var res = await fetch(url, {
+      method: method,
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    if(!res.ok){ var d = await res.json(); throw new Error(d.detail || 'Error'); }
+
+    cerrarModal('modalEstudiante');
+    editandoEstudianteId = null;
+    await renderEstudiantes();
+    verificarBackend();
+  } catch(e){
+    alert('Error al guardar: ' + e.message);
+  }
+}
+
+async function eliminarEstudiante(id){
+  if(!confirm('¿Eliminar este estudiante?')) return;
+  try {
+    var res = await fetch(API_URL + '/api/estudiantes/' + id, {method:'DELETE'});
+    if(!res.ok){ var d = await res.json(); throw new Error(d.detail || 'Error'); }
+    await renderEstudiantes();
+    verificarBackend();
+  } catch(e){
+    alert('Error al eliminar: ' + e.message);
+  }
+}
+
+// ====================================================
+// APODERADOS
+// ====================================================
+async function cargarApoderados(){
+  try {
+    var res = await fetch(API_URL + '/api/apoderados');
+    var data = await res.json();
+    apoderadosCache = data.apoderados || [];
+    renderApoderados(apoderadosCache);
+  } catch(e){
+    console.error(e);
+  }
+}
+
+function renderApoderados(lista){
+  var tbody = $('apoderadosTbody');
+  var summary = $('apoderadosSummary');
+  var footer = $('apoderadosFooterInfo');
+
+  // Mini stats
+  var total = lista.length;
+  var conFoto = lista.filter(a => a.tiene_embedding === 1 || a.tiene_embedding === true).length;
+  var sinFoto = total - conFoto;
+
+  $('apoderadosTotal').textContent = total;
+  $('apoderadosCompletos').textContent = conFoto;
+  $('apoderadosPendientes').textContent = sinFoto;
+  summary.textContent = `${conFoto} con foto — ${sinFoto} pendientes`;
+  footer.textContent = `Mostrando ${lista.length} apoderados`;
+
+  if(!lista.length){
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><svg class="icon icon-lg" viewBox="0 0 24 24" style="opacity:0.4;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><div class="empty-title">Sin apoderados registrados</div></div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = lista.map(ap => {
+    var iniciales = ap.nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+    return `
+      <tr>
+        <td>
+          <div class="cell-name">
+            <div class="cell-avatar green">${iniciales}</div>
+            <div class="cell-info">
+              <div class="cell-primary">${ap.nombre}</div>
+              <div class="cell-secondary">${ap.telefono || '--'}</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-family:monospace;">${ap.dni || '--'}</td>
+        <td>${ap.parentesco || '--'}</td>
+        <td>${ap.estudiante_nombre || '—'}</td>
+        <td>${(ap.tiene_embedding === 1 || ap.tiene_embedding === true) ? '<span class="badge badge-green">Generado</span>' : '<span class="badge badge-amber">Pendiente</span>'}</td>
+        <td><span class="badge badge-green">Activo</span></td>
+        <td>
+          <div class="row-actions">
+            <button class="icon-btn" onclick="editarApoderado(${ap.id})" title="Editar">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="icon-btn danger" onclick="eliminarApoderado(${ap.id})" title="Eliminar">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function filtrarApoderados(){
+  var q = ($('searchApoderados').value || '').toLowerCase();
+  var filtrados = apoderadosCache.filter(ap =>
+    ap.nombre.toLowerCase().includes(q) || (ap.dni && ap.dni.includes(q))
+  );
+  renderApoderados(filtrados);
+}
+
+async function eliminarApoderado(id){
+  if(!confirm('¿Eliminar este apoderado?')) return;
+  try {
+    await fetch(API_URL + '/api/apoderados/' + id, {method:'DELETE'});
+    cargarApoderados();
+    verificarBackend();
+  } catch(e){ alert('Error: ' + e.message); }
+}
+
+// MODAL: registrar/editar apoderado
+// ====================================================
+// MODAL: APODERADO
+// ====================================================
+var apoStream        = null;
+var apoFotoCapturada = null;
+var editandoApoderadoId = null;
+
+async function abrirModalApoderado() {
+  editandoApoderadoId = null;
+  ['apoNombres','apoApellidos','apoDni','apoTelefono'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  var par = document.getElementById('apoParentesco');
+  if(par) par.value = '';
+
+  // Cargar estudiantes desde MySQL para el selector
+  await cargarEstudiantesDesdeMySQL();
+  var sel = document.getElementById('apoEstudiante');
+  if(sel) {
+    var opts = '<option value="">Seleccionar...</option>';
+    estudiantesCache.forEach(function(e) {
+      var nom = ((e.nombres||'') + ' ' + (e.apellidos||'')).trim();
+      var aula = e.aula || '';
+      opts += '<option value="' + e.id + '">' + nom + (aula ? ' — '+aula : '') + '</option>';
+    });
+    sel.innerHTML = opts;
+  }
+
+  apoFotoCapturada = null;
+  var elVideo   = document.getElementById('apoVideo');
+  var elPreview = document.getElementById('apoPreview');
+  var elEmpty   = document.getElementById('apoEmpty');
+  var elBtnInit = document.getElementById('apoBtnInit');
+  var elBtnCap  = document.getElementById('apoBtnCapture');
+  var elBtnRst  = document.getElementById('apoBtnReset');
+  var elBtn     = document.getElementById('btnGuardarApoderado');
+
+  if(elVideo)   elVideo.style.display   = 'block';
+  if(elPreview) elPreview.style.display = 'none';
+  if(elEmpty)   elEmpty.style.display   = 'flex';
+  if(elBtnInit) elBtnInit.disabled      = false;
+  if(elBtnCap)  elBtnCap.disabled       = true;
+  if(elBtnRst)  elBtnRst.disabled       = true;
+  if(elBtn) {
+    elBtn.disabled = true;
+    elBtn.innerHTML = '<svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg> Guardar y generar embedding facial';
+  }
+
+  // Titulo del modal
+  var titulos = document.querySelectorAll('#modalApoderado .modal-titlebar-title');
+  if(titulos.length) titulos[0].innerHTML = '<svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Registrar nuevo apoderado';
+
+  abrirModal('modalApoderado');
+}
+
+async function editarApoderado(id) {
+  await cargarEstudiantesDesdeMySQL();
+  var ap = apoderadosCache.find(x => x.id === id);
+  if(!ap){ alert('Apoderado no encontrado'); return; }
+
+  editandoApoderadoId = id;
+
+  // Separar nombres y apellidos
+  var partes = (ap.nombre || '').trim().split(' ');
+  var apellidos = partes.slice(-2).join(' ');
+  var nombres = partes.slice(0, -2).join(' ') || partes.join(' ');
+
+  $('apoNombres').value = nombres;
+  $('apoApellidos').value = apellidos;
+  $('apoDni').value = ap.dni || '';
+  $('apoTelefono').value = ap.telefono || '';
+  $('apoParentesco').value = ap.parentesco || '';
+
+  // Selector de estudiantes
+  var sel = $('apoEstudiante');
+  var opts = '<option value="">Seleccionar...</option>';
+  estudiantesCache.forEach(function(e) {
+    var nom = ((e.nombres||'') + ' ' + (e.apellidos||'')).trim();
+    var sel_attr = (e.id === ap.estudiante_id) ? 'selected' : '';
+    opts += '<option value="' + e.id + '" ' + sel_attr + '>' + nom + (e.aula ? ' — '+e.aula : '') + '</option>';
+  });
+  sel.innerHTML = opts;
+
+  // En edición no se requiere foto nueva
+  apoFotoCapturada = null;
+  $('apoVideo').style.display = 'block';
+  $('apoPreview').style.display = 'none';
+  $('apoEmpty').style.display = 'flex';
+  $('apoBtnInit').disabled = false;
+  $('apoBtnCapture').disabled = true;
+  $('apoBtnReset').disabled = true;
+
+  // Habilitar el botón guardar (edición sin foto nueva es válida)
+  $('btnGuardarApoderado').disabled = false;
+  $('btnGuardarApoderado').innerHTML = '<svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg> Actualizar datos del apoderado';
+
+  // Titulo
+  var titulos = document.querySelectorAll('#modalApoderado .modal-titlebar-title');
+  if(titulos.length) titulos[0].innerHTML = '<svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/></svg> Editar apoderado';
+
+  abrirModal('modalApoderado');
+}
+
+async function apoIniciarCam() {
+  try {
+    apoStream = await navigator.mediaDevices.getUserMedia({video:{width:640,height:480},audio:false});
+    var vid = document.getElementById('apoVideo');
+    if(vid) vid.srcObject = apoStream;
+    var empty = document.getElementById('apoEmpty');
+    if(empty) empty.style.display = 'none';
+    var btnI = document.getElementById('apoBtnInit');
+    if(btnI) btnI.disabled = true;
+    var btnC = document.getElementById('apoBtnCapture');
+    if(btnC) btnC.disabled = false;
+  } catch(e) {
+    alert('No se pudo acceder a la cámara: ' + e.message);
+  }
+}
+
+function apoDetenerCam() {
+  if(apoStream) { apoStream.getTracks().forEach(function(t){ t.stop(); }); apoStream = null; }
+  var vid = document.getElementById('apoVideo');
+  if(vid) vid.srcObject = null;
+}
+
+function apoCapturar() {
+  var vid = document.getElementById('apoVideo');
+  if(!vid) return;
+  var c = document.createElement('canvas');
+  c.width = vid.videoWidth; c.height = vid.videoHeight;
+  c.getContext('2d').drawImage(vid, 0, 0);
+  apoFotoCapturada = c.toDataURL('image/jpeg', 0.95);
+
+  var elVideo   = document.getElementById('apoVideo');
+  var elPreview = document.getElementById('apoPreview');
+  var elBtnCap  = document.getElementById('apoBtnCapture');
+  var elBtnRst  = document.getElementById('apoBtnReset');
+  var elBtn     = document.getElementById('btnGuardarApoderado');
+
+  if(elVideo)   elVideo.style.display   = 'none';
+  if(elPreview) { elPreview.src = apoFotoCapturada; elPreview.style.display = 'block'; }
+  if(elBtnCap)  elBtnCap.disabled  = true;
+  if(elBtnRst)  elBtnRst.disabled  = false;
+  if(elBtn)     elBtn.disabled     = false;
+}
+
+function apoResetear() {
+  apoFotoCapturada = null;
+  var elVideo   = document.getElementById('apoVideo');
+  var elPreview = document.getElementById('apoPreview');
+  var elBtnCap  = document.getElementById('apoBtnCapture');
+  var elBtnRst  = document.getElementById('apoBtnReset');
+  var elBtn     = document.getElementById('btnGuardarApoderado');
+
+  if(elVideo)   elVideo.style.display   = 'block';
+  if(elPreview) elPreview.style.display = 'none';
+  if(elBtnCap)  elBtnCap.disabled  = false;
+  if(elBtnRst)  elBtnRst.disabled  = true;
+  if(elBtn)     elBtn.disabled     = true;
+}
+
+// Subir foto desde archivo (galería del PC o celular)
+function apoSubirArchivo(event) {
+  var archivo = event.target.files[0];
+  if(!archivo) return;
+
+  // Validar tipo y tamaño
+  if(!archivo.type.match('image.*')) {
+    alert('El archivo debe ser una imagen (JPG o PNG)');
+    return;
+  }
+  if(archivo.size > 10 * 1024 * 1024) {
+    alert('La imagen es muy grande (máximo 10 MB)');
+    return;
+  }
+
+  // Si hay cámara activa, detenerla
+  if(apoStream) {
+    apoStream.getTracks().forEach(function(t){ t.stop(); });
+    apoStream = null;
+  }
+
+  // Leer archivo como base64
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    apoFotoCapturada = e.target.result;
+
+    // Mostrar la foto en el preview
+    var elVideo   = document.getElementById('apoVideo');
+    var elPreview = document.getElementById('apoPreview');
+    var elEmpty   = document.getElementById('apoEmpty');
+    var elBtnInit = document.getElementById('apoBtnInit');
+    var elBtnCap  = document.getElementById('apoBtnCapture');
+    var elBtnRst  = document.getElementById('apoBtnReset');
+    var elBtn     = document.getElementById('btnGuardarApoderado');
+
+    if(elVideo)   elVideo.style.display   = 'none';
+    if(elEmpty)   elEmpty.style.display   = 'none';
+    if(elPreview) { elPreview.src = apoFotoCapturada; elPreview.style.display = 'block'; }
+    if(elBtnInit) elBtnInit.disabled  = false;
+    if(elBtnCap)  elBtnCap.disabled   = true;
+    if(elBtnRst)  elBtnRst.disabled   = false;
+    if(elBtn)     elBtn.disabled      = false;
+  };
+  reader.onerror = function() {
+    alert('Error al leer el archivo. Intente con otra imagen.');
+  };
+  reader.readAsDataURL(archivo);
+
+  // Resetear el input para poder subir la misma imagen otra vez
+  event.target.value = '';
+}
+
+async function guardarApoderado() {
+  var nombres    = (document.getElementById('apoNombres')  ? document.getElementById('apoNombres').value.trim()  : '');
+  var apellidos  = (document.getElementById('apoApellidos')? document.getElementById('apoApellidos').value.trim(): '');
+  var dni        = (document.getElementById('apoDni')      ? document.getElementById('apoDni').value.trim()      : '');
+  var telefono   = (document.getElementById('apoTelefono') ? document.getElementById('apoTelefono').value.trim() : '');
+  var parentesco = (document.getElementById('apoParentesco')? document.getElementById('apoParentesco').value     : '');
+  var estId      = (document.getElementById('apoEstudiante')? document.getElementById('apoEstudiante').value     : '');
+
+  if(!nombres || !apellidos || !dni || !parentesco) { alert('Complete nombres, apellidos, DNI y parentesco'); return; }
+
+  var elBtn = document.getElementById('btnGuardarApoderado');
+  if(elBtn) { elBtn.disabled = true; elBtn.textContent = 'Procesando...'; }
+
+  try {
+    if(editandoApoderadoId){
+      // ===== EDITAR =====
+      var res = await fetch(API_URL + '/api/apoderados/' + editandoApoderadoId, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          nombre: nombres + ' ' + apellidos,
+          parentesco: parentesco, dni: dni, telefono: telefono,
+          estudiante_id: estId ? parseInt(estId) : null
+        })
+      });
+      var data = await res.json();
+      if(res.ok) {
+        alert('Apoderado actualizado correctamente');
+        editandoApoderadoId = null;
+        cerrarModal('modalApoderado');
+        cargarApoderados();
+        verificarBackend();
+      } else {
+        alert('Error: ' + (data.detail || 'No se pudo actualizar'));
+      }
+    } else {
+      // ===== CREAR (requiere foto) =====
+      if(!apoFotoCapturada) { alert('Capture una foto del apoderado primero'); return; }
+
+      var res = await fetch(API_URL + '/api/apoderados/registrar', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          nombre: nombres + ' ' + apellidos,
+          parentesco: parentesco, dni: dni, telefono: telefono,
+          imagen_base64: apoFotoCapturada,
+          estudiante_id: estId ? parseInt(estId) : null
+        })
+      });
+      var data = await res.json();
+      if(res.ok) {
+        alert('Apoderado registrado correctamente. Confianza: ' + (data.confianza_deteccion*100).toFixed(1) + '%');
+        apoDetenerCam();
+        apoFotoCapturada = null;
+        cerrarModal('modalApoderado');
+        cargarApoderados();
+        verificarBackend();
+      } else {
+        alert('Error: ' + (data.detail || 'No se pudo registrar'));
+      }
+    }
+  } catch(e) {
+    alert('Error de conexion: ' + e.message);
+  } finally {
+    if(elBtn) {
+      elBtn.disabled = false;
+      elBtn.innerHTML = editandoApoderadoId
+        ? '<svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg> Actualizar datos del apoderado'
+        : '<svg class="icon icon-sm" viewBox="0 0 24 24" stroke="#fff"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg> Guardar y generar embedding facial';
+    }
+  }
+}
+
+// ====================================================
+// CÁMARA PRINCIPAL (verificación)
+// ====================================================
+let stream = null;
+let intervaloVerif = null;
+let procesando = false;
+let verificacionPausada = false;
+let ultimoAutorizado = null;
+
+async function iniciarCamara(){
+  verificacionPausada = false;
+  ultimoAutorizado = null;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({video:{width:1280,height:720}, audio:false});
+    var video = $('video');
+    video.srcObject = stream;
+    $('cameraEmpty').style.display = 'none';
+    $('recIndicator').style.display = 'flex';
+    $('camLiveChip').style.display = 'inline-flex';
+    $('btnIniciar').disabled = true;
+    $('btnDetener').disabled = false;
+    video.addEventListener('loadedmetadata', () => {
+      var c = $('canvas-hidden');
+      c.width = video.videoWidth;
+      c.height = video.videoHeight;
+    });
+    intervaloVerif = setInterval(verificarFrame, INTERVALO_VERIFICACION);
+  } catch(e){ alert('No se pudo acceder a la cámara: ' + e.message); }
+}
+
+function detenerCamara(){
+  if(stream){ stream.getTracks().forEach(t => t.stop()); stream = null; }
+  if(intervaloVerif){ clearInterval(intervaloVerif); intervaloVerif = null; }
+  if(!$('cameraEmpty')) return;
+  $('cameraEmpty').style.display = 'flex';
+  $('recIndicator').style.display = 'none';
+  $('camLiveChip').style.display = 'none';
+  $('btnIniciar').disabled = false;
+  $('btnDetener').disabled = true;
+  $('faceBox').style.display = 'none';
+  resetResults();
+}
+
+async function verificarFrame(){
+  if(procesando || verificacionPausada) return;
+  procesando = true;
+  var c = $('canvas-hidden');
+  var ctx = c.getContext('2d');
+  ctx.drawImage($('video'), 0, 0, c.width, c.height);
+  var img = c.toDataURL('image/jpeg', 0.85);
+  try {
+    var res = await fetch(API_URL + '/api/verificar', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({imagen_base64:img})
+    });
+    var data = await res.json();
+    procesarResultado(data);
+    if(Date.now() % 6 < 2) verificarBackend();
+  } catch(e){ console.error('Error:', e); }
+  finally { procesando = false; }
+}
+
+function procesarResultado(data){
+  var hora = new Date().toLocaleTimeString('es-PE', {hour12:false});
+  switch(data.estado){
+    case 'sin_rostro':
+      $('faceBox').style.display = 'none';
+      break;
+    case 'sin_apoderados':
+      $('faceBox').style.display = 'none';
+      break;
+    case 'spoofing_detectado':
+      mostrarRostro(data.coordenadas_rostro, 'warning', 'SUPLANTACIÓN', `liveness ${data.liveness_score.toFixed(0)}%`);
+      mostrarAlerta({
+        title:'Suplantación detectada',
+        subtitle:`Acceso bloqueado — ${hora}`,
+        name:'Intento de suplantación', meta: data.motivos[0] || 'Imagen no real',
+        confidence: data.liveness_score, isSpoof:true
+      });
+      break;
+    case 'autorizado':
+      var p = data.apoderado;
+      ultimoAutorizado = { apoderado: p, confianza: data.similitud_porcentual };
+      verificacionPausada = true;
+      mostrarRostro(data.coordenadas_rostro, 'success', p.nombre.split(' ')[0] + ' — AUTORIZADO', `${data.similitud_porcentual.toFixed(1)}%`);
+      mostrarAutorizado({nombre:p.nombre, parentesco:p.parentesco, dni:p.dni, confianza:data.similitud_porcentual, hora:hora});
+      break;
+    case 'no_autorizado':
+      mostrarRostro(data.coordenadas_rostro, 'error', 'DESCONOCIDO — ALERTA', `${data.similitud_porcentual.toFixed(1)}%`);
+      mostrarAlerta({
+        title:'Persona NO AUTORIZADA',
+        subtitle:`Acceso denegado — ${hora}`,
+        name:'Identidad desconocida', meta:'No encontrado en base de datos',
+        confidence:data.similitud_porcentual, isSpoof:false
+      });
+      break;
+  }
+}
+
+function mostrarAutorizado(opts){
+  $('authEmpty').style.display = 'none';
+  $('authContent').style.display = 'block';
+  $('resultCardAuth').classList.add('active-success');
+  $('authTitle').textContent = 'Apoderado AUTORIZADO';
+  $('authSub').textContent = `Acceso permitido — ${opts.hora}`;
+  var iniciales = opts.nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+  $('authAvatar').textContent = iniciales;
+  $('authName').textContent = opts.nombre;
+  $('authMeta').textContent = `${opts.parentesco} — DNI: ${opts.dni}`;
+  $('authConfVal').textContent = opts.confianza.toFixed(1) + '%';
+  $('authConfBar').style.width = Math.min(100, opts.confianza) + '%';
+  $('authThreshold').textContent = opts.confianza >= 85
+    ? `Umbral mínimo: 85% — Supera el umbral por ${(opts.confianza - 85).toFixed(1)} puntos`
+    : `Umbral mínimo: 85%`;
+}
+
+function mostrarAlerta(opts){
+  $('alertEmpty').style.display = 'none';
+  $('alertContent').style.display = 'block';
+  $('resultCardAlert').classList.add('active-danger');
+  $('alertTitle').textContent = opts.title;
+  $('alertSub').textContent = opts.subtitle;
+  if(opts.isSpoof){
+    $('alertAvatar').className = 'person-avatar warn';
+    $('alertAvatar').textContent = '!';
+  } else {
+    $('alertAvatar').className = 'person-avatar danger';
+    $('alertAvatar').textContent = '?';
+  }
+  $('alertName').textContent = opts.name;
+  $('alertMeta').textContent = opts.meta;
+  $('alertConfVal').textContent = opts.confidence.toFixed(1) + '%';
+  $('alertConfBar').style.width = Math.min(100, opts.confidence) + '%';
+}
+
+function mostrarRostro(coords, tipo, label, conf){
+  if(!coords || coords.length !== 4) return;
+  var [x1, y1, x2, y2] = coords;
+  var video = $('video');
+  var c = $('canvas-hidden');
+  var vRect = video.getBoundingClientRect();
+  var scaleX = vRect.width / c.width;
+  var scaleY = vRect.height / c.height;
+  var x1m = c.width - x2;
+  var box = $('faceBox');
+  box.style.display = 'block';
+  box.style.left = (x1m * scaleX) + 'px';
+  box.style.top = (y1 * scaleY) + 'px';
+  box.style.width = ((x2 - x1) * scaleX) + 'px';
+  box.style.height = ((y2 - y1) * scaleY) + 'px';
+  box.className = 'face-box';
+  if(tipo === 'error') box.classList.add('error');
+  if(tipo === 'warning') box.classList.add('warning');
+  $('faceBoxText').textContent = label;
+  $('faceBoxConf').textContent = conf;
+}
+
+function resetResults(){
+  $('authEmpty').style.display = 'block';
+  $('authContent').style.display = 'none';
+  $('resultCardAuth').classList.remove('active-success');
+  $('authSub').textContent = 'Esperando verificación...';
+  $('alertEmpty').style.display = 'block';
+  $('alertContent').style.display = 'none';
+  $('resultCardAlert').classList.remove('active-danger');
+  $('alertSub').textContent = 'Esperando verificación...';
+}
+
+async function confirmarRecojo(){
+  if(!ultimoAutorizado) return;
+  var ap = ultimoAutorizado.apoderado;
+  var btnEl = document.querySelector('#authContent .btn-success');
+  var btnCont = document.getElementById('btnContinuarEscaneando');
+  if(btnEl) btnEl.disabled = true;
+  if(btnCont) btnCont.disabled = true;
+
+  try {
+    var estudianteId = ap.estudiante_id || null;
+
+    if(estudianteId) {
+      var res = await fetch(API_URL + '/api/estudiantes/' + estudianteId + '/recoger', {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          apoderado_id:     ap.id,
+          apoderado_nombre: ap.nombre,
+          confianza:        ultimoAutorizado.confianza
+        })
+      });
+      if(!res.ok){
+        var d = await res.json();
+        alert('Error al confirmar recojo: ' + (d.detail || 'Error desconocido'));
+        if(btnEl) btnEl.disabled = false;
+        if(btnCont) btnCont.disabled = false;
+        return;
+      }
+    }
+
+    // Limpiar estado ANTES de resetear UI
+    ultimoAutorizado = null;
+    resetResults();
+    $('faceBox').style.display = 'none';
+    $('authSub').textContent = 'Reanudando en 3s...';
+
+    cargarEventos();
+    verificarBackend();
+    if($('page-historial') && $('page-historial').classList.contains('active')){
+      cargarHistorialCompleto();
+    }
+
+    // Cooldown de 3 segundos para evitar re-detectar a la misma persona
+    var cuenta = 3;
+    var timer = setInterval(function(){
+      cuenta--;
+      var subEl = $('authSub');
+      if(subEl) subEl.textContent = cuenta > 0 ? 'Reanudando en ' + cuenta + 's...' : 'Esperando verificación...';
+      if(cuenta <= 0){
+        clearInterval(timer);
+        verificacionPausada = false;
+      }
+    }, 1000);
+
+  } catch(e){
+    alert('Error: ' + e.message);
+    if(btnEl) btnEl.disabled = false;
+    if(btnCont) btnCont.disabled = false;
+  }
+}
+
+function continuarEscaneando(){
+  ultimoAutorizado = null;
+  verificacionPausada = false;
+  resetResults();
+  $('faceBox').style.display = 'none';
+}
+
+function llamarDireccion(){ alert('Llamando a la dirección del colegio...'); }
+
+// ====================================================
+// EVENTOS (dashboard)
+// ====================================================
+async function cargarEventos(){
+  try {
+    var res = await fetch(API_URL + '/api/eventos?limite=6');
+    var data = await res.json();
+    renderEventos(data.eventos || []);
+    renderAlertas(data.eventos || []);
+  } catch(e){ console.error(e); }
+}
+
+function renderEventos(eventos){
+  var el = $('dashEventList');
+  if(!eventos.length){
+    el.innerHTML = '<div class="empty"><svg class="icon icon-lg" viewBox="0 0 24 24" style="opacity:0.4;"><path d="M20 6L9 17l-5-5"/></svg><div class="empty-title">Sin eventos hoy</div></div>';
+    return;
+  }
+  el.innerHTML = eventos.map(e => {
+    var dotClass, titulo, meta;
+    if(e.tipo === 'recojo_confirmado'){
+      dotClass = 'success'; titulo = (e.nombre || 'Apoderado') + ' — Recojo confirmado';
+      meta = e.confianza ? `Confianza: ${e.confianza.toFixed(1)}%` : 'Confirmado por personal';
+    } else if(e.tipo === 'autorizado'){
+      dotClass = 'success'; titulo = (e.nombre || 'Apoderado') + ' — Reconocido';
+      meta = e.confianza ? `FaceNet: ${e.confianza.toFixed(1)}%` : 'OK';
+    } else if(e.tipo === 'no_autorizado'){
+      dotClass = 'danger'; titulo = 'Persona desconocida — Alerta';
+      meta = e.confianza ? `Similitud: ${e.confianza.toFixed(1)}%` : 'Sin match';
+    } else if(e.tipo === 'spoofing_detectado'){
+      dotClass = 'warning'; titulo = 'Suplantación bloqueada';
+      meta = e.motivo || 'Anti-spoofing detectó pantalla';
+    } else { dotClass=''; titulo=e.tipo; meta=''; }
+    var hora = e.fecha ? new Date(e.fecha).toLocaleTimeString('es-PE', {hour12:false}).slice(0,5) : '--';
+    return `
+      <div class="event-item">
+        <div class="event-dot ${dotClass}"></div>
+        <div class="event-content">
+          <div class="event-title">${titulo}</div>
+          <div class="event-meta">${meta}</div>
+        </div>
+        <div class="event-time">${hora}</div>
+      </div>`;
+  }).join('');
+}
+
+// ====================================================
+// CONFIGURACIÓN
+// ====================================================
+const STORAGE_CONFIG = 'safepickup_config';
+
+const CONFIG_DEFAULT = {
+  modelo: 'facenet512',
+  detector: 'mtcnn',
+  umbral: 0.60,
+  antispoof: 'ensemble',
+  votos: '2',
+  alertaVisual: 'immediate',
+  alertaSonora: 'off',
+  correo: '',
+  guardarCaptura: 'off',
+  fuente: 'webcam',
+  resolucion: '1280x720',
+  intervalo: '2',
+  iluminacion: 'clahe',
+  espejo: 'on',
+  backup: 'daily'
+};
+
+function cargarConfiguracion(){
+  var cfg = Object.assign({}, CONFIG_DEFAULT, JSON.parse(localStorage.getItem(STORAGE_CONFIG) || '{}'));
+
+  $('cfgModelo').value = cfg.modelo;
+  $('cfgDetector').value = cfg.detector;
+  $('cfgUmbral').value = cfg.umbral;
+  $('cfgAntispoof').value = cfg.antispoof;
+  $('cfgVotos').value = cfg.votos;
+  $('cfgAlertaVisual').value = cfg.alertaVisual;
+  $('cfgAlertaSonora').value = cfg.alertaSonora;
+  $('cfgCorreo').value = cfg.correo || '';
+  $('cfgGuardarCaptura').value = cfg.guardarCaptura;
+  $('cfgFuente').value = cfg.fuente;
+  $('cfgResolucion').value = cfg.resolucion;
+  $('cfgIntervalo').value = cfg.intervalo;
+  $('cfgIluminacion').value = cfg.iluminacion;
+  $('cfgEspejo').value = cfg.espejo;
+  $('cfgBackup').value = cfg.backup;
+
+  actualizarSliderUmbral();
+
+  // Estado backend
+  fetch(API_URL + '/api/estado').then(r => r.json()).then(data => {
+    $('cfgJsonPath').textContent = `data/database/ — ${data.apoderados_registrados} apoderados — local`;
+  }).catch(() => {
+    $('cfgJsonPath').textContent = 'data/database/ — backend desconectado';
+  });
+}
+
+function actualizarSliderUmbral(){
+  var v = parseFloat($('cfgUmbral').value);
+  var label = $('thresholdLabel');
+  label.textContent = v.toFixed(2);
+  // Posicionar el label sobre el thumb
+  var min = 0.30, max = 1.00;
+  var pct = ((v - min) / (max - min)) * 100;
+  label.style.left = pct + '%';
+  marcarConfigSinGuardar();
+}
+
+let configModificado = false;
+function marcarConfigSinGuardar(){
+  if(!configModificado){
+    configModificado = true;
+    $('cfgLastSaved').textContent = 'Cambios sin guardar';
+    $('cfgLastSaved').style.color = 'var(--amber)';
+  }
+}
+
+// Marcar cuando cualquier campo cambie
+document.addEventListener('change', e => {
+  if(e.target.id && e.target.id.startsWith('cfg')){
+    marcarConfigSinGuardar();
+  }
+});
+
+function guardarConfig(){
+  var cfg = {
+    modelo: $('cfgModelo').value,
+    detector: $('cfgDetector').value,
+    umbral: parseFloat($('cfgUmbral').value),
+    antispoof: $('cfgAntispoof').value,
+    votos: $('cfgVotos').value,
+    alertaVisual: $('cfgAlertaVisual').value,
+    alertaSonora: $('cfgAlertaSonora').value,
+    correo: $('cfgCorreo').value.trim(),
+    guardarCaptura: $('cfgGuardarCaptura').value,
+    fuente: $('cfgFuente').value,
+    resolucion: $('cfgResolucion').value,
+    intervalo: $('cfgIntervalo').value,
+    iluminacion: $('cfgIluminacion').value,
+    espejo: $('cfgEspejo').value,
+    backup: $('cfgBackup').value
+  };
+
+  localStorage.setItem(STORAGE_CONFIG, JSON.stringify(cfg));
+  configModificado = false;
+  var hora = new Date().toLocaleTimeString('es-PE', {hour12:false});
+  $('cfgLastSaved').textContent = 'Guardado a las ' + hora;
+  $('cfgLastSaved').style.color = 'var(--green)';
+
+  // Mensaje informativo
+  alert('Configuración guardada correctamente.\n\nNota: Los cambios en umbral, antispoof y votos requieren reiniciar el servidor Python para aplicarse al motor de IA.');
+}
+
+function restablecerConfig(){
+  if(!confirm('¿Restablecer todos los valores a los predeterminados?')) return;
+  localStorage.removeItem(STORAGE_CONFIG);
+  cargarConfiguracion();
+  configModificado = false;
+  $('cfgLastSaved').textContent = 'Valores restablecidos';
+  $('cfgLastSaved').style.color = 'var(--text-2)';
+}
+
+function exportarConfig(){
+  var cfg = JSON.parse(localStorage.getItem(STORAGE_CONFIG) || JSON.stringify(CONFIG_DEFAULT));
+  var blob = new Blob([JSON.stringify(cfg, null, 2)], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'safepickup_config_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ====================================================
+// HISTORIAL
+// ====================================================
+let historialCache = [];
+
+async function cargarHistorialCompleto(){
+  try {
+    var res = await fetch(API_URL + '/api/eventos?limite=500');
+    var data = await res.json();
+    historialCache = data.eventos || [];
+
+    // Calcular KPIs
+    var hoy = new Date().toISOString().slice(0,10);
+    var eventosHoy = historialCache.filter(e => (e.fecha || '').startsWith(hoy));
+    var auth = eventosHoy.filter(e => e.tipo === 'recojo_confirmado').length;
+    var noauth = eventosHoy.filter(e => e.tipo === 'no_autorizado').length;
+    var spoof = eventosHoy.filter(e => e.tipo === 'spoofing_detectado').length;
+    var total = eventosHoy.length;
+    var pctAuth = total > 0 ? ((auth / total) * 100).toFixed(1) : 0;
+
+    $('histTotal').textContent = total;
+    $('histTotalSub').textContent = 'hoy ' + new Date().toLocaleDateString('es-PE');
+    $('histAuth').textContent = auth;
+    $('histAuthSub').textContent = total > 0 ? pctAuth + '% del total' : '0% del total';
+    $('histAlerts').textContent = noauth + spoof;
+    $('histAvgTime').innerHTML = '0.4<span style="font-size:18px;font-weight:600;color:var(--text-2);">s</span>';
+
+    // Fecha por defecto = hoy
+    if(!$('histFiltroFecha').value){
+      $('histFiltroFecha').value = hoy;
+    }
+
+    filtrarHistorial();
+  } catch(e){ console.error(e); }
+}
+
+function filtrarHistorial(){
+  var fecha = $('histFiltroFecha').value;
+  var tipo = $('histFiltroTipo').value;
+  var buscar = ($('histBuscar').value || '').toLowerCase();
+
+  var filtrados = historialCache.filter(e => {
+    if(fecha && !(e.fecha || '').startsWith(fecha)) return false;
+    if(tipo && e.tipo !== tipo) return false;
+    if(buscar){
+      var txt = ((e.nombre || '') + ' ' + (e.motivo || '')).toLowerCase();
+      if(!txt.includes(buscar)) return false;
+    }
+    return true;
+  });
+
+  renderHistorial(filtrados);
+  $('historyFooterInfo').textContent = `Mostrando ${filtrados.length} de ${historialCache.length} eventos`;
+}
+
+function renderHistorial(eventos){
+  var el = $('historyList');
+  if(!eventos.length){
+    el.innerHTML = `
+      <div class="empty">
+        <svg class="icon icon-lg" viewBox="0 0 24 24" style="opacity:0.4;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div class="empty-title">Sin eventos en este filtro</div>
+        <div class="empty-sub">Pruebe cambiando la fecha o tipo de evento</div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = eventos.map(e => {
+    var dotClass, titulo, meta;
+    if(e.tipo === 'recojo_confirmado'){
+      dotClass = 'success';
+      titulo = (e.nombre || 'Apoderado') + ' — Recojo CONFIRMADO';
+      var conf = e.confianza ? ` — Confianza: ${e.confianza.toFixed(1)}%` : '';
+      meta = `Recojo confirmado por personal${conf}`;
+    } else if(e.tipo === 'autorizado'){
+      dotClass = 'success';
+      titulo = (e.nombre || 'Apoderado') + ' — Reconocido';
+      var conf = e.confianza ? ` — FaceNet: ${e.confianza.toFixed(1)}%` : '';
+      meta = `Rostro verificado${conf}`;
+    } else if(e.tipo === 'no_autorizado'){
+      dotClass = 'danger';
+      titulo = 'Persona desconocida — ALERTA generada';
+      var conf = e.confianza ? ` — FaceNet: ${e.confianza.toFixed(1)}%` : '';
+      meta = `No encontrado en base de datos${conf} — Dirección notificada`;
+    } else if(e.tipo === 'spoofing_detectado'){
+      dotClass = 'warning';
+      titulo = 'Suplantación bloqueada por anti-spoofing';
+      meta = e.motivo || 'Anti-spoofing detectó pantalla/foto digital';
+    } else {
+      dotClass = 'info';
+      titulo = e.tipo;
+      meta = e.motivo || '';
+    }
+    var hora = e.fecha ? new Date(e.fecha).toLocaleTimeString('es-PE', {hour12:false}).slice(0,5) : '--:--';
+
+    return `
+      <div class="history-item">
+        <div class="history-dot ${dotClass}"></div>
+        <div class="history-content">
+          <div class="history-title">${titulo}</div>
+          <div class="history-meta">${meta}</div>
+        </div>
+        <div class="history-time">${hora}</div>
+      </div>`;
+  }).join('');
+}
+
+function exportarHistorial(formato){
+  alert(`Exportación a ${formato.toUpperCase()} disponible en próxima versión.\nFunción preparada para integración con biblioteca de generación de reportes.`);
+}
+
+// ====================================================
+// ESTADÍSTICAS
+// ====================================================
+async function cargarEstadisticas(){
+  try {
+    var res = await fetch(API_URL + '/api/eventos?limite=500');
+    var data = await res.json();
+    var eventos = data.eventos || [];
+
+    // Filtrar eventos de hoy
+    var hoy = new Date().toISOString().slice(0,10);
+    var eventosHoy = eventos.filter(e => (e.fecha || '').startsWith(hoy));
+
+    var auth = eventosHoy.filter(e => e.tipo === 'autorizado').length;
+    var total = eventosHoy.length;
+    var tasaAuth = total > 0 ? ((auth / total) * 100).toFixed(1) : 0;
+
+    $('totalHoyChip').textContent = total + ' hoy';
+    $('statEfectividad').textContent = tasaAuth + '%';
+    $('statTasaAuth').textContent = tasaAuth + '%';
+    $('barTasaAuth').style.width = tasaAuth + '%';
+    $('statVelocidad').textContent = '0.4s prom.';
+
+    // Calcular distribución por hora (agrupar por hora del día)
+    var porHora = {};
+    eventosHoy.forEach(e => {
+      if(!e.fecha) return;
+      var d = new Date(e.fecha);
+      var h = d.getHours();
+      var m = d.getMinutes() < 30 ? '00' : '30';
+      var key = String(h).padStart(2,'0') + ':' + m;
+      porHora[key] = (porHora[key] || 0) + 1;
+    });
+
+    renderBarChart(porHora, total);
+
+    // Resumen semanal: agrupar por día
+    renderResumenSemanal(eventos);
+
+  } catch(e){ console.error(e); }
+}
+
+function renderBarChart(porHora, total){
+  var el = $('barChartHoras');
+  var keys = Object.keys(porHora).sort();
+
+  if(!keys.length){
+    el.innerHTML = `
+      <div class="empty">
+        <svg class="icon icon-lg" viewBox="0 0 24 24" style="opacity:0.4;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <div class="empty-title">Sin datos suficientes</div>
+        <div class="empty-sub">Los gráficos se actualizan al haber verificaciones</div>
+      </div>`;
+    return;
+  }
+
+  var max = Math.max(...Object.values(porHora));
+  el.innerHTML = keys.map(k => {
+    var v = porHora[k];
+    var pct = max > 0 ? (v / max) * 100 : 0;
+    // Color: barras más recientes (mayor cantidad) en verde
+    var color = v >= max * 0.7 ? 'green' : 'blue';
+    return `
+      <div class="bar-chart-row">
+        <div class="bar-chart-label">${k}</div>
+        <div class="bar-chart-bar">
+          <div class="bar-chart-fill ${color}" style="width:${Math.max(pct, 8)}%;">${v}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderResumenSemanal(eventos){
+  var tbody = $('resumenSemanalBody');
+  var dias = [];
+  var nombresDias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+  // Generar los últimos 7 días
+  for(let i = 6; i >= 0; i--){
+    var d = new Date();
+    d.setDate(d.getDate() - i);
+    var fecha = d.toISOString().slice(0,10);
+    var eventosDia = eventos.filter(e => (e.fecha || '').startsWith(fecha));
+    var auth = eventosDia.filter(e => e.tipo === 'autorizado').length;
+    var alertas = eventosDia.filter(e => e.tipo === 'no_autorizado' || e.tipo === 'spoofing_detectado').length;
+    var total = eventosDia.length;
+
+    dias.push({
+      nombre: nombresDias[d.getDay()] + ' ' + d.getDate(),
+      total: total,
+      auth: auth,
+      alertas: alertas,
+      precision: total > 0 ? ((auth / total) * 100).toFixed(1) : '--',
+      tiempo: total > 0 ? '0.40s' : '--',
+      estado: total === 0 ? 'sin-datos' : (alertas > total * 0.2 ? 'atencion' : 'normal')
+    });
+  }
+
+  if(dias.every(d => d.total === 0)){
+    tbody.innerHTML = `
+      <tr><td colspan="7">
+        <div class="empty">
+          <svg class="icon icon-lg" viewBox="0 0 24 24" style="opacity:0.4;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/></svg>
+          <div class="empty-title">Sin datos esta semana</div>
+          <div class="empty-sub">Use el sistema para generar estadísticas</div>
+        </div>
+      </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = dias.map(d => {
+    var estadoBadge = d.estado === 'normal' ? '<span class="badge badge-green">Normal</span>'
+      : d.estado === 'atencion' ? '<span class="badge badge-amber">Atención</span>'
+      : '<span class="badge badge-gray">Sin datos</span>';
+    return `
+      <tr>
+        <td><strong>${d.nombre}</strong></td>
+        <td>${d.total}</td>
+        <td>${d.auth > 0 ? '<span class="badge badge-green">' + d.auth + '</span>' : '0'}</td>
+        <td>${d.alertas > 0 ? '<span class="badge badge-red">' + d.alertas + '</span>' : '0'}</td>
+        <td>${d.precision === '--' ? '--' : d.precision + '%'}</td>
+        <td>${d.tiempo}</td>
+        <td>${estadoBadge}</td>
+      </tr>`;
+  }).join('');
+}
+
+function renderAlertas(eventos){
+  var alertas = eventos.filter(e => e.tipo === 'no_autorizado' || e.tipo === 'spoofing_detectado').slice(0, 3);
+  var el = $('alertList');
+  if(!alertas.length){
+    el.innerHTML = '<div class="empty"><svg class="icon icon-lg" viewBox="0 0 24 24" style="opacity:0.4;"><path d="M20 6L9 17l-5-5"/></svg><div class="empty-title">Sin alertas activas</div></div>';
+    return;
+  }
+  el.innerHTML = alertas.map(a => {
+    var tipo = a.tipo === 'spoofing_detectado' ? 'warning' : 'danger';
+    var titulo = a.tipo === 'spoofing_detectado' ? 'Suplantación bloqueada' : 'No autorizado';
+    var meta = a.motivo || (a.confianza ? `Similitud: ${a.confianza.toFixed(1)}%` : 'Sin coincidencia');
+    var hora = a.fecha ? new Date(a.fecha).toLocaleTimeString('es-PE', {hour12:false}).slice(0,5) : '--';
+    return `
+      <div class="alert-item ${tipo}">
+        <div class="alert-title"><span>${titulo} — ${hora}</span></div>
+        <div class="alert-meta">${meta}</div>
+      </div>`;
+  }).join('');
+}
+
+</script>
+</body>
+</html>
