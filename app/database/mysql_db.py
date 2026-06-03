@@ -114,7 +114,13 @@ def inicializar_schema():
                     ('Ositos',5,'A','blue'),('Estrellitas',4,'A,B,C','purple')""")
                 cur.execute("""INSERT IGNORE INTO usuarios (usuario, password, nombre, rol) VALUES
                     ('admin','safepickup2026','Directora Sánchez','admin'),
-                    ('director','director123','Director General','director')""")
+                    ('director','director123','Director General','director'),
+                    ('dcastellon@unamad.edu.pe','admin','Profesor Castellón','director')""")
+                # Restriccion UNIQUE en DNI de apoderados
+                try:
+                    cur.execute("ALTER TABLE apoderados ADD UNIQUE INDEX idx_apoderado_dni_uq (dni)")
+                except:
+                    pass  # Ya existe
         print("[OK] Schema inicializado correctamente")
     except Exception as e:
         print(f"[WARN] Error inicializando schema: {e}")

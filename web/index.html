@@ -1668,7 +1668,7 @@ select.form-control{cursor:pointer;}
           </div>
           <div class="form-group">
             <label class="form-label">Teléfono</label>
-            <input type="text" class="form-control" id="apoTelefono" placeholder="987654321">
+            <input type="text" class="form-control" id="apoTelefono" placeholder="987654321" maxlength="9">
           </div>
         </div>
         <div class="form-row">
@@ -2847,6 +2847,8 @@ async function guardarApoderado() {
   var estId      = (document.getElementById('apoEstudiante')? document.getElementById('apoEstudiante').value     : '');
 
   if(!nombres || !apellidos || !dni || !parentesco) { alert('Complete nombres, apellidos, DNI y parentesco'); return; }
+  if(!/^\d{8}$/.test(dni)) { alert('El DNI debe tener exactamente 8 dígitos numéricos'); return; }
+  if(telefono && !/^\d{9}$/.test(telefono)) { alert('El teléfono debe tener exactamente 9 dígitos'); return; }
 
   var elBtn = document.getElementById('btnGuardarApoderado');
   if(elBtn) { elBtn.disabled = true; elBtn.textContent = 'Procesando...'; }
