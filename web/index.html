@@ -574,10 +574,6 @@ select.form-control{cursor:pointer;}
       Iniciar sesión
     </button>
 
-    <div class="login-hint">
-      Credenciales de prueba:<br>
-      Usuario: <code>admin</code> · Contraseña: <code>safepickup2026</code>
-    </div>
   </div>
 </div>
 
@@ -1945,10 +1941,6 @@ const API_URL = window.location.origin.includes('localhost')
   : window.location.origin;
 const INTERVALO_VERIFICACION = 2000;
 
-const CREDENCIALES = {
-  'admin': 'safepickup2026',
-  'director': 'director123'
-};
 
 // Datos persistidos en localStorage
 const STORAGE_AULAS = 'safepickup_aulas';
@@ -1975,24 +1967,36 @@ function guardarEstudiantes(){ localStorage.setItem(STORAGE_ESTUDIANTES, JSON.st
 // ====================================================
 // LOGIN
 // ====================================================
-function hacerLogin(){
+async function hacerLogin(){
   var user = document.getElementById('loginUser').value.trim();
   var pass = document.getElementById('loginPass').value;
   var errorEl = document.getElementById('loginError');
-  if(CREDENCIALES[user] && CREDENCIALES[user] === pass){
-    sessionStorage.setItem('safepickup_user', user);
-    mostrarApp(user);
-    errorEl.classList.remove('show');
-  } else {
+  if(!user || !pass){ errorEl.classList.add('show'); return; }
+  try {
+    var res = await fetch(API_URL + '/api/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({usuario: user, password: pass})
+    });
+    var data = await res.json();
+    if(data.ok){
+      sessionStorage.setItem('safepickup_user', user);
+      sessionStorage.setItem('safepickup_nombre', data.nombre);
+      mostrarApp(user, data.nombre);
+      errorEl.classList.remove('show');
+    } else {
+      errorEl.classList.add('show');
+    }
+  } catch(e) {
     errorEl.classList.add('show');
   }
 }
 
-function mostrarApp(user){
+function mostrarApp(user, nombre){
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('app').classList.add('show');
-  var nombre = user === 'admin' ? 'Directora Sánchez' : 'Director General';
-  var iniciales = nombre.split(' ').map(n=>n[0]).join('').slice(0,2);
+  if(!nombre) nombre = sessionStorage.getItem('safepickup_nombre') || user;
+  var iniciales = nombre.split(' ').map(function(n){return n[0];}).join('').slice(0,2).toUpperCase();
   document.getElementById('userName').textContent = nombre;
   document.getElementById('userInitials').textContent = iniciales;
 

@@ -107,6 +107,10 @@ class RecojoRequest(BaseModel):
     apoderado_nombre: str = None
     confianza:        float = None
 
+class LoginRequest(BaseModel):
+    usuario:  str
+    password: str
+
 
 def base64_a_cv2(imagen_base64: str):
     if ',' in imagen_base64:
@@ -124,6 +128,14 @@ def servir_frontend():
     if html_path.exists():
         return FileResponse(str(html_path))
     return JSONResponse({"error": "index.html no encontrado"}, status_code=404)
+
+
+@app.post("/api/login")
+def login(req: LoginRequest):
+    user = db.verificar_usuario(req.usuario, req.password)
+    if user:
+        return {"ok": True, "usuario": user['usuario'], "nombre": user['nombre'], "rol": user['rol']}
+    return JSONResponse({"ok": False, "detail": "Usuario o contraseña incorrectos"}, status_code=401)
 
 
 @app.get("/api/estado")
