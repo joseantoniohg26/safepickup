@@ -57,7 +57,13 @@
 @keyframes orb2{0%,100%{transform:translate(0,0)}33%{transform:translate(-50px,35px)}66%{transform:translate(25px,-25px)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.5;min-height:100vh;}
+body{
+  font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
+  font-size:13px;line-height:1.5;min-height:100vh;
+  background-image:
+    radial-gradient(ellipse 700px 500px at 105% 15%,rgba(15,45,92,0.07) 0%,transparent 70%),
+    radial-gradient(ellipse 500px 700px at -5% 90%,rgba(200,22,29,0.04) 0%,transparent 65%);
+}
 
 .icon{width:18px;height:18px;stroke-width:1.8;stroke:currentColor;fill:none;stroke-linecap:round;stroke-linejoin:round;display:inline-block;flex-shrink:0;}
 .icon-sm{width:14px;height:14px;}
@@ -68,9 +74,9 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .login{
   position:fixed;inset:0;z-index:1000;
   display:flex;align-items:center;justify-content:center;padding:20px;
-  background:linear-gradient(135deg,#071426 0%,#0A1F40 35%,#0F2D5C 65%,#071A35 100%);
-  background-size:400% 400%;
-  animation:gradMove 16s ease infinite;
+  background:
+    linear-gradient(135deg,rgba(7,20,38,0.88) 0%,rgba(10,31,64,0.83) 40%,rgba(15,45,92,0.78) 70%,rgba(7,26,53,0.9) 100%),
+    url('https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat fixed;
   overflow:hidden;
 }
 .login::before{
@@ -388,8 +394,16 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 
 .dash-grid{display:grid;grid-template-columns:1fr 360px;gap:16px;}
 
-.dash-cam{background:#0B1120;aspect-ratio:16/9;border-radius:var(--radius);position:relative;overflow:hidden;}
-.dash-cam-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(255,255,255,0.35);gap:10px;}
+.dash-cam{
+  background:#0B1120 url('https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=900&q=60') center/cover no-repeat;
+  aspect-ratio:16/9;border-radius:var(--radius);position:relative;overflow:hidden;
+}
+.dash-cam-empty{
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(7,20,38,0.88),rgba(15,45,92,0.78));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  color:rgba(255,255,255,0.85);gap:10px;
+}
 .dash-cam-link{margin-top:10px;background:var(--accent);color:#fff;padding:7px 14px;border-radius:5px;font-size:11px;text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:none;font-family:inherit;}
 .dash-cam-info{font-size:11px;color:var(--text-2);padding:10px 16px;background:var(--bg);border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
 
@@ -488,8 +502,25 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 
 /* ============= PAGE HEADER ============= */
 .page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:14px;flex-wrap:wrap;}
-.page-head-info h2{font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.page-head-info h2{font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px;letter-spacing:-0.3px;}
 .page-head-info p{font-size:12px;color:var(--text-2);}
+
+/* ---- Banner hero reutilizable ---- */
+.dash-hero{
+  border-radius:16px;overflow:hidden;margin-bottom:20px;position:relative;height:110px;
+  background:
+    linear-gradient(135deg,rgba(7,20,38,0.88) 0%,rgba(10,31,64,0.78) 55%,rgba(15,45,92,0.58) 100%),
+    url('https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
+  display:flex;align-items:center;padding:0 28px;gap:20px;box-shadow:var(--shadow-md);
+}
+.dash-hero-title{font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.4px;line-height:1.2;}
+.dash-hero-sub{font-size:12px;color:rgba(255,255,255,0.65);margin-top:4px;}
+.dash-hero-badge{
+  background:rgba(200,22,29,0.85);color:#fff;padding:6px 16px;border-radius:20px;
+  font-size:11px;font-weight:700;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.15);
+  margin-left:auto;white-space:nowrap;box-shadow:0 4px 12px rgba(200,22,29,0.35);
+  animation:glow 3s ease-in-out infinite;
+}
 
 /* ============= TABLA ============= */
 .table-toolbar{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--bg);}
@@ -558,25 +589,90 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .mini-stat-value.amber{color:var(--amber);}
 .mini-stat-sub{font-size:11px;color:var(--text-3);margin-top:4px;font-weight:500;}
 
-/* ============= AULAS GRID ============= */
-.aulas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+/* ============= AULAS GRID — estilo sir.edu.pe ============= */
+.aulas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;}
+
 .aula-card{
-  background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);
-  padding:16px;box-shadow:var(--shadow);
-  transition:all 0.25s ease;animation:fadeIn 0.4s ease both;
+  background:#fff;border:none;border-radius:20px;
+  padding:0;overflow:hidden;
+  box-shadow:0 4px 24px rgba(15,45,92,0.10),0 1px 4px rgba(0,0,0,0.04);
+  transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  animation:fadeIn 0.4s ease both;
 }
-.aula-card:hover{box-shadow:var(--shadow-md);transform:translateY(-3px);border-color:rgba(15,45,92,0.12);}
-.aula-card-head{display:flex;align-items:flex-start;gap:11px;margin-bottom:12px;}
-.aula-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.2s;}
-.aula-card:hover .aula-icon{transform:scale(1.1) rotate(-5deg);}
+.aula-card:hover{
+  transform:translateY(-6px) scale(1.01);
+  box-shadow:0 20px 48px rgba(15,45,92,0.18),0 4px 12px rgba(0,0,0,0.08);
+}
+
+.aula-card-head{
+  height:190px;margin:0;padding:0 20px 18px;
+  display:flex;align-items:flex-end;gap:14px;
+  position:relative;overflow:hidden;
+  background:#1E3A6E center/cover no-repeat;
+}
+/* Dark photo overlay */
+.aula-card-head::before{
+  content:'';position:absolute;inset:0;z-index:1;
+  background:linear-gradient(to bottom,rgba(0,0,0,0.08) 0%,rgba(0,0,0,0.60) 100%);
+}
+/* Colored accent line at bottom (like sir.edu.pe red line) */
+.aula-card-head::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:4px;z-index:3;
+  background:linear-gradient(90deg,var(--accent),#FF4D54);
+}
+
+/* Icon and info above overlay */
+.aula-card-head .aula-icon,
+.aula-card-head .aula-info{position:relative;z-index:2;}
+
+.aula-icon{
+  width:46px;height:46px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  background:rgba(255,255,255,0.22) !important;
+  color:#fff !important;
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.28);
+  box-shadow:0 4px 12px rgba(0,0,0,0.2);
+}
 .aula-info{flex:1;min-width:0;}
-.aula-name{font-size:14px;font-weight:700;color:var(--text);}
-.aula-edad{font-size:11px;color:var(--text-2);margin-top:2px;}
-.aula-secciones{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
-.aula-seccion-tag{padding:3px 10px;background:var(--blue-bg);color:var(--blue-text);border:1px solid var(--blue-border);border-radius:11px;font-size:11px;font-weight:600;}
-.aula-stats{display:flex;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border-soft);font-size:11px;}
-.aula-stat-label{color:var(--text-3);font-weight:500;}
-.aula-stat-value{font-weight:600;color:var(--text);}
+.aula-name{font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.3px;text-shadow:0 1px 4px rgba(0,0,0,0.3);}
+.aula-edad{font-size:11px;color:rgba(255,255,255,0.8);margin-top:3px;font-weight:500;}
+
+/* Different photos per aula */
+.aulas-grid .aula-card:nth-child(3n+1) .aula-card-head{
+  background-image:url('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=600&q=80');
+  background-color:#1E40AF;
+}
+.aulas-grid .aula-card:nth-child(3n+2) .aula-card-head{
+  background-image:url('https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80');
+  background-color:#166534;
+}
+.aulas-grid .aula-card:nth-child(3n) .aula-card-head{
+  background-image:url('https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=600&q=80');
+  background-color:#6D28D9;
+}
+
+/* White body section */
+.aula-card > .aula-secciones{
+  display:flex;gap:7px;flex-wrap:wrap;
+  padding:16px 18px 0;margin-bottom:0;
+}
+.aula-seccion-tag{
+  padding:4px 12px;background:var(--blue-bg);color:var(--blue-text);
+  border:1px solid var(--blue-border);border-radius:12px;font-size:11px;font-weight:700;
+  transition:all 0.15s;
+}
+.aula-seccion-tag:hover{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+.aula-stats{
+  display:flex;justify-content:space-between;
+  padding:12px 18px 18px;
+  border-top:0;margin-top:12px;
+  background:linear-gradient(180deg,#FAFBFD,#fff);
+  font-size:12px;
+}
+.aula-stat-label{color:var(--text-3);font-weight:500;font-size:11px;}
+.aula-stat-value{font-weight:800;color:var(--text);font-size:14px;}
 
 /* ============= MODAL ============= */
 .modal-backdrop{
@@ -933,6 +1029,13 @@ select.form-control{cursor:pointer;}
 
   <!-- ════════════ DASHBOARD ════════════ -->
   <div class="page active" id="page-dashboard">
+    <div class="dash-hero">
+      <div>
+        <div class="dash-hero-title" id="dashHeroTitle">Bienvenido, Admin</div>
+        <div class="dash-hero-sub">SafePickup · I.E.I. Nivel Inicial — Puerto Maldonado</div>
+      </div>
+      <span class="dash-hero-badge" id="dashFecha"></span>
+    </div>
     <div class="kpi-grid">
       <div class="kpi-card">
         <div class="kpi-icon-wrap kpi-blue">
@@ -2256,6 +2359,19 @@ function mostrarApp(user, nombre){
   var iniciales = nombre.split(' ').map(function(n){return n[0];}).join('').slice(0,2).toUpperCase();
   document.getElementById('userName').textContent = nombre;
   document.getElementById('userInitials').textContent = iniciales;
+
+  // Hero banner
+  var primerNombre = nombre.split(' ')[0];
+  var horaActual = new Date().getHours();
+  var saludo = horaActual < 12 ? 'Buenos días' : horaActual < 19 ? 'Buenas tardes' : 'Buenas noches';
+  var heroTitle = document.getElementById('dashHeroTitle');
+  if(heroTitle) heroTitle.textContent = saludo + ', ' + primerNombre;
+  var fechaEl = document.getElementById('dashFecha');
+  if(fechaEl){
+    var ahora = new Date();
+    var opciones = {weekday:'long', day:'numeric', month:'long'};
+    fechaEl.textContent = ahora.toLocaleDateString('es-PE', opciones);
+  }
 
   verificarBackend();
   cargarEventos();
