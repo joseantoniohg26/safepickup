@@ -864,27 +864,111 @@ select.form-control{cursor:pointer;}
 .metric-row-bar-fill.green{background:var(--green);}
 .metric-row-bar-fill.blue{background:var(--primary);}
 
+/* ============= HAMBURGER ============= */
+.hamburger-btn{
+  display:none;
+  flex-direction:column;justify-content:center;align-items:center;
+  width:38px;height:38px;border:none;background:var(--bg);
+  border-radius:8px;cursor:pointer;gap:5px;flex-shrink:0;
+  transition:background 0.2s;border:1.5px solid var(--border);
+}
+.hamburger-btn:hover{background:var(--border);}
+.hamburger-btn span{
+  display:block;width:18px;height:2px;background:var(--text);
+  border-radius:2px;transition:all 0.25s ease;transform-origin:center;
+}
+.hamburger-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.hamburger-btn.open span:nth-child(2){opacity:0;transform:scaleX(0);}
+.hamburger-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+/* Overlay para cerrar sidebar en móvil */
+.sidebar-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(7,20,38,0.55);z-index:99;
+  backdrop-filter:blur(2px);
+  animation:fadeIn 0.2s ease;
+}
+.sidebar-overlay.show{display:block;}
+
+/* Ocultar etiqueta "Backend activo" en pantallas pequeñas */
+.chip-label{display:inline;}
+
+/* ============= RESPONSIVE ============= */
 @media (max-width:1100px){
   .dash-grid{grid-template-columns:1fr;}
   .result-grid{grid-template-columns:1fr;}
   .kpi-grid{grid-template-columns:repeat(2,1fr);}
-  .mini-stats{grid-template-columns:1fr;}
+  .mini-stats{grid-template-columns:repeat(2,1fr);}
   .stat-grid-2{grid-template-columns:1fr;}
   .config-grid{grid-template-columns:1fr;}
 }
+
+@media (max-width:900px){
+  .aulas-grid{grid-template-columns:repeat(2,1fr);}
+}
+
+/* ===== TABLET ===== */
 @media (max-width:768px){
-  .sidebar{position:fixed;left:-240px;z-index:100;transition:left 0.2s;}
-  .sidebar.open{left:0;}
-  .kpi-grid{grid-template-columns:1fr;}
+  .hamburger-btn{display:flex;}
+  .sidebar{
+    position:fixed;left:-248px;z-index:100;
+    transition:left 0.28s cubic-bezier(0.4,0,0.2,1);
+    box-shadow:none;
+  }
+  .sidebar.open{left:0;box-shadow:8px 0 32px rgba(0,0,0,0.3);}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
   .form-row,.form-row-3{grid-template-columns:1fr;}
-  .content{padding:14px;}
+  .content{padding:14px 12px;}
+  .topbar{padding:0 14px;height:52px;}
+  .page-title{font-size:13px;}
+  .breadcrumb{display:none;}
+  .chip-hide-xs{display:none;}
+  .dash-grid{grid-template-columns:1fr;}
+  .result-grid{grid-template-columns:1fr;}
+  .mini-stats{grid-template-columns:repeat(2,1fr);}
+  .stat-grid-2{grid-template-columns:1fr;}
+  .config-grid{grid-template-columns:1fr;}
+  .dash-hero{height:auto;min-height:90px;padding:16px 18px;}
+  .dash-hero-title{font-size:16px;}
+  .dash-hero-badge{font-size:10px;padding:5px 12px;margin-left:0;margin-top:8px;}
+  .dash-hero{flex-wrap:wrap;}
+  .aulas-grid{grid-template-columns:1fr;}
+  .modal{margin:0;border-radius:12px 12px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100vw !important;max-height:92vh !important;}
+  .modal-body{padding:18px 16px;}
+}
+
+/* ===== MÓVIL ===== */
+@media (max-width:480px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .kpi-card{padding:12px 10px;gap:10px;}
+  .kpi-value{font-size:22px;}
+  .kpi-icon-wrap{width:36px;height:36px;border-radius:9px;}
+  .kpi-label{font-size:9px;}
+  .kpi-sub{font-size:10px;}
+  .content{padding:10px;}
+  .mini-stats{grid-template-columns:1fr;}
+  .chip-hora{font-size:10px;padding:4px 8px;}
+  .chip-label{display:none;}
+  .topbar-right{gap:5px;}
+  .table-toolbar{flex-wrap:wrap;gap:8px;}
+  .search-box{max-width:100%;width:100%;}
+  .page-head{flex-direction:column;align-items:flex-start;gap:10px;}
+  .page-head .btn{width:100%;justify-content:center;}
+  .data-table thead th{padding:10px 12px;font-size:9px;}
+  .data-table tbody td{padding:10px 12px;font-size:11px;}
+  .row-actions{gap:3px;}
+  .icon-btn{width:28px;height:28px;}
+  .modal-footer{flex-direction:column;gap:8px;}
+  .modal-footer .btn{width:100%;justify-content:center;}
+  .dash-hero-title{font-size:15px;}
+  .aula-card-head{height:150px;}
 }
 
 #canvas-hidden{display:none;}
 
-::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:4px;}
+::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:3px;}
 ::-webkit-scrollbar-thumb:hover{background:#94A3B8;}
 </style>
 </head>
@@ -1005,10 +1089,15 @@ select.form-control{cursor:pointer;}
   </div>
 </aside>
 
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="cerrarSidebar()"></div>
+
 <main class="main">
 
   <div class="topbar">
     <div class="topbar-left">
+      <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Menú">
+        <span></span><span></span><span></span>
+      </button>
       <div>
         <div class="page-title" id="pageTitle">Panel general</div>
         <div class="breadcrumb">
@@ -1019,9 +1108,9 @@ select.form-control{cursor:pointer;}
       </div>
     </div>
     <div class="topbar-right">
-      <span class="chip chip-green" id="chipBackend"><span class="chip-dot"></span>Backend activo</span>
-      <span class="chip" id="chipApoderados">0 apoderados</span>
-      <span class="chip" id="chipHora">--:--:--</span>
+      <span class="chip chip-green" id="chipBackend"><span class="chip-dot"></span><span class="chip-label">Backend activo</span></span>
+      <span class="chip chip-hide-xs" id="chipApoderados">0 apoderados</span>
+      <span class="chip chip-hora" id="chipHora">--:--:--</span>
     </div>
   </div>
 
@@ -2417,6 +2506,24 @@ const PAGE_BREADCRUMBS = {
   'configuracion':'Sistema › Configuración'
 };
 
+/* ---- Sidebar móvil ---- */
+function toggleSidebar(){
+  var sb = document.querySelector('.sidebar');
+  var ov = document.getElementById('sidebarOverlay');
+  var btn = document.getElementById('hamburgerBtn');
+  sb.classList.toggle('open');
+  ov.classList.toggle('show');
+  btn.classList.toggle('open');
+}
+function cerrarSidebar(){
+  var sb = document.querySelector('.sidebar');
+  var ov = document.getElementById('sidebarOverlay');
+  var btn = document.getElementById('hamburgerBtn');
+  sb.classList.remove('open');
+  ov.classList.remove('show');
+  btn.classList.remove('open');
+}
+
 function navegar(page){
   if(page !== 'camara') detenerCamara();
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -2427,6 +2534,9 @@ function navegar(page){
   if(navEl) navEl.classList.add('active');
   document.getElementById('pageTitle').textContent = PAGE_TITLES[page] || page;
   document.getElementById('breadcrumb').textContent = PAGE_BREADCRUMBS[page] || page;
+
+  // Cerrar sidebar al navegar en móvil
+  if(window.innerWidth <= 768) cerrarSidebar();
 
   if(page === 'dashboard'){ verificarBackend(); cargarEventos(); }
   if(page === 'estudiantes') renderEstudiantes();
@@ -2446,6 +2556,11 @@ function tick(){
   if($('camChipTime')) $('camChipTime').textContent = t;
 }
 setInterval(tick, 1000); tick();
+
+// Resetear sidebar al cambiar a desktop
+window.addEventListener('resize', function(){
+  if(window.innerWidth > 768) cerrarSidebar();
+});
 
 async function verificarBackend(){
   try {
